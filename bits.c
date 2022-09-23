@@ -175,7 +175,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int thirdBits(void) {
-  return 2;
+    return ((0x24 | (0x49<<8)) << 15) | (0x24 | (0x49<<8));
 }
 /*
  * fitsShort - return 1 if x can be represented as a
