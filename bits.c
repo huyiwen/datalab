@@ -186,7 +186,7 @@ int thirdBits(void) {
  *   Rating: 1
  */
 int fitsShort(int x) {
-  return 2;
+    return !(((x << 1) >> 16) + (x>>31)&1);
 }
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,
