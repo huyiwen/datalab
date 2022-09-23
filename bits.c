@@ -158,6 +158,7 @@ NOTES:
 /* wchar_t uses ISO/IEC 10646 (2nd ed., published 2011-03-15) /
    Unicode 6.0.  */
 /* We do not support C11 <threads.h>.  */
+
 /*
  * bitXor - x^y using only ~ and &
  *   Example: bitXor(4, 5) = 1
@@ -168,6 +169,7 @@ NOTES:
 int bitXor(int x, int y) {
     return ~(~x&~y)&~(x&y);
 }
+
 /*
  * thirdBits - return word with every third bit (starting from the LSB) set to 1
  *   Legal ops: ! ~ & ^ | + << >>
@@ -177,6 +179,7 @@ int bitXor(int x, int y) {
 int thirdBits(void) {
     return ((0x49 | (0x12<<8)) << 18) | (0x49 | (0x92<<8));
 }
+
 /*
  * fitsShort - return 1 if x can be represented as a
  *   16-bit, two's complement integer.
@@ -188,6 +191,7 @@ int thirdBits(void) {
 int fitsShort(int x) {
     return !(((x << 1) >> 16) + ((x>>31)&1));
 }
+
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,
  *     and 0 otherwise
@@ -196,8 +200,9 @@ int fitsShort(int x) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return !((~0)^x^(x+1));
+    return (!( (~0) ^ x ^ (x+1))) & (!!(x+1));
 }
+
 /*
  * fitsBits - return 1 if x can be represented as an
  *  n-bit, two's complement integer.
@@ -210,6 +215,7 @@ int isTmax(int x) {
 int fitsBits(int x, int n) {
   return 2;
 }
+
 /*
  * upperBits - pads n upper bits with 1's
  *  You may assume 0 <= n <= 32
