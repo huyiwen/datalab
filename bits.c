@@ -196,7 +196,7 @@ int fitsShort(int x) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+    return !((~0)^x^(x+1));
 }
 /*
  * fitsBits - return 1 if x can be represented as an
