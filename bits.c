@@ -177,7 +177,8 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int thirdBits(void) {
-    return ((0x49 | (0x12<<8)) << 18) | (0x49 | (0x92<<8));
+    int x = 0x49 | (0x92<<8);
+    return (x << 18) | x;
 }
 
 /*
@@ -200,7 +201,8 @@ int fitsShort(int x) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return (!( (~0) ^ x ^ (x+1))) & (!!(x+1));
+    int y = x + 1;
+    return (!( (~0) ^ x ^ y)) & (!!y);
 }
 
 /*
@@ -227,6 +229,7 @@ int fitsBits(int x, int n) {
 int upperBits(int n) {
   return 2;
 }
+
 /*
  * anyOddBit - return 1 if any odd-numbered bit in word set to 1
  *   Examples anyOddBit(0x5) = 0, anyOddBit(0x7) = 1
