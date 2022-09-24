@@ -277,7 +277,8 @@ int byteSwap(int x, int n, int m) {
  *   Rating: 4
  */
 int absVal(int x) {
-    return 2;
+    int sign = x >> 31;
+    return (x ^ sign) + (sign & 1);
 }
 
 /*
