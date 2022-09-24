@@ -263,8 +263,8 @@ int byteSwap(int x, int n, int m) {
     int mask_n = 0xff << octuple_n;
     int mask_m = 0xff << octuple_m;
     int remain = x & (~(mask_n | mask_m));
-    int new_n = ((x & mask_n) >> octuple_n) << octuple_m;
-    int new_m = ((x & mask_m) >> octuple_m) << octuple_n;
+    int new_n = (((x & mask_n) >> octuple_n) & 0xff) << octuple_m;
+    int new_m = (((x & mask_m) >> octuple_m) & 0xff) << octuple_n;
     return remain + new_m + new_n;
 }
 
