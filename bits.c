@@ -215,7 +215,7 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+    return !(((x << 1) >> n) + ((x>>31)&1));
 }
 
 /*
@@ -227,7 +227,7 @@ int fitsBits(int x, int n) {
  *  Rating: 1
  */
 int upperBits(int n) {
-  return 2;
+    return ((1 << 31) >> n) << 1;
 }
 
 /*
@@ -238,8 +238,12 @@ int upperBits(int n) {
  *   Rating: 2
  */
 int anyOddBit(int x) {
-    return 2;
+    int odd = 0xAA;
+    odd = odd << 8 | odd;
+    odd = odd << 16 | odd;
+    return odd & x;
 }
+
 /*
  * byteSwap - swaps the nth byte and the mth byte
  *  Examples: byteSwap(0x12345678, 1, 3) = 0x56341278
@@ -250,8 +254,20 @@ int anyOddBit(int x) {
  *  Rating: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+    int double_n = n + n;
+    int quadruple_n = double_n + double_n;
+    int octuple_n = quadruple_n + quadruple_n;
+    int double_m = m + m;
+    int quadruple_m = double_m + double_m;
+    int octuple_m = quadruple_m + quadruple_m;
+    int mask_n = 0xff << octuple_n;
+    int mask_m = 0xff << octuple_m;
+    int remain = x & (~(mask_n | mask_m));
+    int new_n = ((x & mask_n) >> octuple_n) << octuple_m;
+    int new_m = ((x & mask_m) >> octuple_m) << octuple_n;
+    return remain + new_m + new_n;
 }
+
 /*
  * absVal - absolute value of x
  *   Example: absVal(-1) = 1.
@@ -261,8 +277,9 @@ int byteSwap(int x, int n, int m) {
  *   Rating: 4
  */
 int absVal(int x) {
-  return 2;
+    return 2;
 }
+
 /*
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
  *  Round toward zero
