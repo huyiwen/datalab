@@ -227,7 +227,7 @@ int fitsBits(int x, int n) {
  *  Rating: 1
  */
 int upperBits(int n) {
-    return ((1 << 31) >> n) << 1;
+    return (((1 << 31) >> n) << 1) + (((n >> 5) << 31) >> 31) ;
 }
 
 /*
