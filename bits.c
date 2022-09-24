@@ -239,9 +239,9 @@ int upperBits(int n) {
  */
 int anyOddBit(int x) {
     int odd = 0xAA;
-    odd = odd << 8 | odd;
-    odd = odd << 16 | odd;
-    return odd & x;
+    odd = (odd << 8) | odd;
+    odd = (odd << 16) | odd;
+    return !!(odd & x);
 }
 
 /*
