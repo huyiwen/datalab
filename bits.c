@@ -215,7 +215,7 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-    return !(((x << 1) >> n) + ((x>>31)&1));
+    return !(((x << 1) >> n) + ((x>>31)&1)) + (n >> 5);
 }
 
 /*
