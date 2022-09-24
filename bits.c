@@ -265,7 +265,7 @@ int byteSwap(int x, int n, int m) {
     int remain = x & (~(mask_n | mask_m));
     int new_n = (((x & mask_n) >> octuple_n) & 0xff) << octuple_m;
     int new_m = (((x & mask_m) >> octuple_m) & 0xff) << octuple_n;
-    return remain + new_m + new_n;
+    return remain | new_m | new_n;
 }
 
 /*
