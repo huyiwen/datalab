@@ -186,23 +186,27 @@ int thirdBits(void) {
  *   16-bit, two's complement integer.
  *   Examples: fitsShort(33000) = 0, fitsShort(-32768) = 1
  *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 8
+ *   Max ops: 8 (4)
  *   Rating: 1
  */
 int fitsShort(int x) {
-    return !(((x << 1) >> 16) + ((x>>31)&1));
+    return !(((x << 1) >> 16) + ((x>>31)&1));  // 6
+    //return
 }
 
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,
  *     and 0 otherwise
  *   Legal ops: ! ~ & ^ | +
- *   Max ops: 10
+ *   Max ops: 10 (5)
  *   Rating: 1
  */
 int isTmax(int x) {
-    int y = x + 1;
-    return (!( (~0) ^ x ^ y)) & (!!y);
+    // return (!( x ^ y ^ ~(!x))) & (!!y);  // 8
+    int y = x+1;
+    // return !((y+x)^(~(!y)));  // 6
+    // return !((~(1<<31)) ^ x);  // 4
+    return !(~(y+x+!y));  // 6
 }
 
 /*
@@ -211,7 +215,7 @@ int isTmax(int x) {
  *   1 <= n <= 32
  *   Examples: fitsBits(5,3) = 0, fitsBits(-4,3) = 1
  *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 15
+ *   Max ops: 15 (5)
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
@@ -223,11 +227,12 @@ int fitsBits(int x, int n) {
  *  You may assume 0 <= n <= 32
  *  Example: upperBits(4) = 0xF0000000
  *  Legal ops: ! ~ & ^ | + << >>
- *  Max ops: 10
+ *  Max ops: 10 (5)
  *  Rating: 1
  */
 int upperBits(int n) {
-    return (((1 << 31) >> n) << 1) + (((n >> 5) << 31) >> 31) ;
+    return ((~0) << ((~n)+33)) + (!n);  // 6
+    // return (((1 << 31) >> n) << 1) + (((n >> 5) << 31) >> 31) ;
 }
 
 /*
@@ -250,7 +255,7 @@ int anyOddBit(int x) {
  *            byteSwap(0xDEADBEEF, 0, 2) = 0xDEEFBEAD
  *  You may assume that 0 <= n <= 3, 0 <= m <= 3
  *  Legal ops: ! ~ & ^ | + << >>
- *  Max ops: 25
+ *  Max ops: 25 (10)
  *  Rating: 2
  */
 int byteSwap(int x, int n, int m) {
