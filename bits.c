@@ -259,18 +259,14 @@ int anyOddBit(int x) {
  *  Rating: 2
  */
 int byteSwap(int x, int n, int m) {
-    int double_n = n + n;
-    int quadruple_n = double_n + double_n;
-    int octuple_n = quadruple_n + quadruple_n;
-    int double_m = m + m;
-    int quadruple_m = double_m + double_m;
-    int octuple_m = quadruple_m + quadruple_m;
+    int octuple_n = n << 3;
+    int octuple_m = m << 3;
     int mask_n = 0xff << octuple_n;
     int mask_m = 0xff << octuple_m;
-    int remain = x & (~(mask_n | mask_m));
-    int new_n = (((x & mask_n) >> octuple_n) & 0xff) << octuple_m;
-    int new_m = (((x & mask_m) >> octuple_m) & 0xff) << octuple_n;
-    return remain | new_m | new_n;
+    int get_n = ((x & mask_n) >> octuple_n); 
+    int get_m = ((x & mask_m) >> octuple_m); 
+    int mix = (get_n ^ get_m) & 0xff;
+    return x ^ (mix << mask_n) ^ (mix << mask_m);
 }
 
 /*
@@ -283,7 +279,7 @@ int byteSwap(int x, int n, int m) {
  */
 int absVal(int x) {
     int sign = x >> 31;
-    return (x ^ sign) + (sign & 1);
+    return (x + sign) ^ sign;
 }
 
 /*
@@ -297,6 +293,7 @@ int absVal(int x) {
 int divpwr2(int x, int n) {
     return 2;
 }
+
 /*
  * float_neg - Return bit-level equivalent of expression -f for
  *   floating point argument f.
@@ -311,6 +308,7 @@ int divpwr2(int x, int n) {
 unsigned float_neg(unsigned uf) {
  return 2;
 }
+
 /*
  * logicalNeg - implement the ! operator, using all of
  *              the legal operators except !
@@ -320,8 +318,14 @@ unsigned float_neg(unsigned uf) {
  *   Rating: 4
  */
 int logicalNeg(int x) {
-  return 2;
+    x = (x >> 16) | x;
+    x = (x >> 8) | x;
+    x = (x >> 4) | x;
+    x = (x >> 2) | x;
+    x = (x >> 1) | x;
+    return x & 1;
 }
+
 /*
  * bitMask - Generate a mask consisting of all 1's
  *   lowbit and highbit
@@ -333,8 +337,12 @@ int logicalNeg(int x) {
  *   Rating: 3
  */
 int bitMask(int highbit, int lowbit) {
-  return 2;
+    int diff = highbit + (~lowbit) + 2;
+    int sign = diff >> 31;
+    diff = (((diff + sign) ^ sign) + diff) >> 1;
+    return ~((~((~0) << diff)) << lowbit);
 }
+
 /*
  * isGreater - if x > y  then return 1, else return 0
  *   Example: isGreater(4,5) = 0, isGreater(5,4) = 1
@@ -343,8 +351,14 @@ int bitMask(int highbit, int lowbit) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-  return 2;
+    int m = (x >> 2) + (x & 3);
+    int n = (y >> 2) + (y & 3);
+    int diff = n + (~m) + 2;
+    int sign = diff >> 31;
+    diff = !(((diff + sign) ^ sign) + diff);
+    return diff;
 }
+
 /*
  * logicalShift - shift x to the right by n, using a logical shift
  *   Can assume that 0 <= n <= 31
@@ -356,6 +370,7 @@ int isGreater(int x, int y) {
 int logicalShift(int x, int n) {
   return 2;
 }
+
 /*
  * satMul2 - multiplies by 2, saturating to Tmin or Tmax if overflow
  *   Examples: satMul2(0x30000000) = 0x60000000
@@ -368,6 +383,7 @@ int logicalShift(int x, int n) {
 int satMul2(int x) {
   return 2;
 }
+
 /*
  * subOK - Determine if can compute x-y without overflow
  *   Example: subOK(0x80000000,0x80000000) = 1,
@@ -379,6 +395,7 @@ int satMul2(int x) {
 int subOK(int x, int y) {
   return 2;
 }
+
 /*
  * trueThreeFourths - multiplies by 3/4 rounding toward 0,
  *   avoiding errors due to overflow
@@ -393,6 +410,7 @@ int trueThreeFourths(int x)
 {
   return 2;
 }
+
 /*
  * isPower2 - returns 1 if x is a power of 2, and 0 otherwise
  *   Examples: isPower2(5) = 0, isPower2(8) = 1, isPower2(0) = 0
@@ -404,6 +422,7 @@ int trueThreeFourths(int x)
 int isPower2(int x) {
   return 2;
 }
+
 /*
  * float_i2f - Return bit-level equivalent of expression (float) x
  *   Result is returned as unsigned int, but
@@ -416,6 +435,7 @@ int isPower2(int x) {
 unsigned float_i2f(int x) {
   return 2;
 }
+
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
  *  Examples: howManyBits(12) = 5
@@ -431,6 +451,7 @@ unsigned float_i2f(int x) {
 int howManyBits(int x) {
   return 0;
 }
+
 /*
  * float_half - Return bit-level equivalent of expression 0.5*f for
  *   floating point argument f.
