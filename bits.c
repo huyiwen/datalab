@@ -307,7 +307,7 @@ int divpwr2(int x, int n) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
- return 2;
+   return 2;
 }
 
 /*
