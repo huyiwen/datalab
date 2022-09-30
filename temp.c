@@ -1,5 +1,7 @@
 #include<stdio.h>
 
+#define print(xx) printf(#xx ":\t%08x %d\n", (xx), (xx));
+
 
 int main ()
 {
@@ -8,9 +10,15 @@ int main ()
         if (num == 1) scanf("%d", &x), y = m = n = x;
         else if (num == 2) scanf("%d%d", &x, &n), y = n;
         else if (num == 3) scanf("%d%d%d", &x, &n, &m);
+        int highbit = x, lowbit = n;
 
-        ans = ((x | ((~x) + 1)) >> 31) + 1;
-        printf("%08x %d\n", ans, ans     );
+
+        int sign = (x >> 31);
+        int inc = (sign << n) ^ sign;
+        ans = (x + inc) >> n;
+        print(sign);
+        print(inc);
+        print(ans);
 
 
     }

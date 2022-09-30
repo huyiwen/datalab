@@ -292,7 +292,8 @@ int absVal(int x) {
  */
 int divpwr2(int x, int n) {
     int sign = (x >> 31);
-    return (((((x + sign) ^ sign) >> n) + sign) ^ sign);
+    int inc = (sign << n) ^ sign;
+    return (x + inc) >> n;
 }
 
 /*
@@ -319,12 +320,7 @@ unsigned float_neg(unsigned uf) {
  *   Rating: 4
  */
 int logicalNeg(int x) {
-    x = (x >> 16) | x;
-    x = (x >> 8) | x;
-    x = (x >> 4) | x;
-    x = (x >> 2) | x;
-    x = (x >> 1) | x;
-    return x & 1;
+    return ((x | ((~x) + 1)) >> 31) + 1;
 }
 
 /*
@@ -338,10 +334,11 @@ int logicalNeg(int x) {
  *   Rating: 3
  */
 int bitMask(int highbit, int lowbit) {
-    int diff = highbit + (~lowbit) + 2;
-    int sign = diff >> 31;
-    diff = (((diff + sign) ^ sign) + diff) >> 1;
-    return ~((~((~0) << diff)) << lowbit);
+    int sign = ~1;
+    int mask = ~(sign << highbit);
+    mask >>= lowbit;
+    mask <<= lowbit;
+    return mask;
 }
 
 /*
