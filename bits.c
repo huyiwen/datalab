@@ -190,7 +190,8 @@ int thirdBits(void) {
  *   Rating: 1
  */
 int fitsShort(int x) {
-    return !(((x << 1) >> 16) + ((x>>31)&1));  // 6
+    int shorts = x >> 15;
+    return !shorts | !(shorts + 1);
     //return
 }
 
@@ -207,6 +208,7 @@ int isTmax(int x) {
     // return !((y+x)^(~(!y)));  // 6
     // return !((~(1<<31)) ^ x);  // 4
     return !(~(y+x+!y));  // 6
+    // return (~y) & x;
 }
 
 /*
@@ -219,7 +221,8 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-    return !(((x << 1) >> n) + ((x>>31)&1)) | (n >> 5);
+    int bits = x >> (n + (~0));
+    return !bits | !(bits + 1);
 }
 
 /*
@@ -366,7 +369,8 @@ int isGreater(int x, int y) {
  *   Rating: 3
  */
 int logicalShift(int x, int n) {
-  return 2;
+    int tmp = (x >> 31) << (~n + 33);
+    return tmp ^ (x >> n);
 }
 
 /*

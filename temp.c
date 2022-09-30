@@ -13,12 +13,15 @@ int main ()
         int highbit = x, lowbit = n;
 
 
-        int sign = (x >> 31);
-        int inc = (sign << n) ^ sign;
-        ans = (x + inc) >> n;
-        print(sign);
-        print(inc);
+
+        // ans = ((1 << 31) >> n) ^ (x >> n);
+        print(x);
+        print(x >> n);
+        int tmp = (x >> 31) << (~n + 33);
+        print(tmp);
+        ans = tmp ^ (x >> n);
         print(ans);
+
 
 
     }
