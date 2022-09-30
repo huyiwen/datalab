@@ -263,10 +263,10 @@ int byteSwap(int x, int n, int m) {
     int octuple_m = m << 3;
     int mask_n = 0xff << octuple_n;
     int mask_m = 0xff << octuple_m;
-    int get_n = ((x & mask_n) >> octuple_n); 
-    int get_m = ((x & mask_m) >> octuple_m); 
+    int get_n = ((x & mask_n) >> octuple_n);
+    int get_m = ((x & mask_m) >> octuple_m);
     int mix = (get_n ^ get_m) & 0xff;
-    return x ^ (mix << mask_n) ^ (mix << mask_m);
+    return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 }
 
 /*

@@ -1,20 +1,27 @@
 #include<stdio.h>
 
+
+int byteSwap(int x, int n, int m) {
+    int octuple_n = n << 3;
+    int octuple_m = m << 3;
+    int mask_n = 0xff << octuple_n;
+    int mask_m = 0xff << octuple_m;
+    int get_n = ((x & mask_n) >> octuple_n);
+    int get_m = ((x & mask_m) >> octuple_m);
+    int mix = (get_n ^ get_m) & 0xff;
+    return x ^ (mix << octuple_m) ^ (mix << octuple_n);
+}
+
 int main ()
 {
-    int x, y;
-    scanf("%d%d", &x, &y);
-    int m = (x >> 1) + (x & 1);
-    int n = (y >> 1) + (y & 1 ^ (y >> 31));
-    int diff = n + (~m) + 2;
-    int sign = diff >> 31;
-    int ans = !(((diff + sign) ^ sign) + diff);
+    int x, y, m, n;
+    scanf("%d%d%d", &x, &n, &m);
 
-    printf("%08x\n", x);
-    printf("%08x\n", diff    );
-    printf("%08x\n", ans    );  // [log_m(32)] * 2(m-1)
 
-    
+    printf("%08x\n", byteSwap(x, n, m)     );
+
+
+
 
     return 0;
 }
