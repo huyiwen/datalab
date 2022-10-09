@@ -207,8 +207,9 @@ int isTmax(int x) {
     int y = x+1;
     // return !((y+x)^(~(!y)));  // 6
     // return !((~(1<<31)) ^ x);  // 4
-    return !(~(y+x+!y));  // 6
+    // return !(~(y+x+!y));  // 6
     // return (~y) & x;
+    return !((y+y) | (!y));
 }
 
 /*
