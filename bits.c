@@ -408,9 +408,11 @@ int subOK(int x, int y) {
  *   Max ops: 20
  *   Rating: 4
  */
-int trueThreeFourths(int x)
-{
-  return 2;
+int trueThreeFourths(int x) {
+    int y = x >> 2;
+    int two = x & 0x3;
+    int min = two + (~(x >> 31)) + !two;
+    return (y << 1) + y + min;
 }
 
 /*
