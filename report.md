@@ -31,4 +31,13 @@
 
 ### fitsBits
 
-###
+### upperBits
+
+### anyOddBit
+
+### byteSwap
+
+### absVal
+
+
+
