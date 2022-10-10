@@ -193,8 +193,8 @@ int fitsShort(int x) {
     // int shorts = x >> 15;
     // return !shorts | !(shorts + 1);
     //return
-    int sign = x >> 31;
-
+    int trunc = (x << 16) >> 16;
+    return !(x ^ trunc);
 }
 
 /*
