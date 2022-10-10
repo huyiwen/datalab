@@ -12,13 +12,10 @@ int main ()
         else if (num == 3) scanf("%d%d%d", &x, &n, &m);
         int highbit = x, lowbit = n;
 
-        int nn = !n;
-        int ret = ((~nn) << (~n + !nn));
-        int _ans = ((~0) << ((~n)+33)) + (!n);
+        int trunc = x >> 15;
+        int ret = !((x >> 31) ^ trunc);
         print(ret);
-        print(nn);
-        print(!(n & 0x20));
-        print(_ans);
+        print(trunc);
 
     }
     return 0;

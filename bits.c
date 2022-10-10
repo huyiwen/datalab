@@ -193,8 +193,8 @@ int fitsShort(int x) {
     // int shorts = x >> 15;
     // return !shorts | !(shorts + 1);
     //return
-    int trunc = (x << 16) >> 16;
-    return !(x ^ trunc);
+    int trunc = x >> 15;
+    return !((x >> 31) ^ trunc);
 }
 
 /*
@@ -224,8 +224,12 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-    int bits = x >> (n + (~0));
-    return !bits | !(bits + 1);
+    // int bits = x >> (n + 31);
+    // return !bits | !(bits + 1);
+    // int trunc = (x << n) >> n;
+    // return !(x ^ trunc);
+    int trunc = x >> (n + 31);
+    return !((x >> 31) ^ trunc);
 }
 
 /*
