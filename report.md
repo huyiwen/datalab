@@ -11,6 +11,9 @@
 - `!(x | y)` 连等于一个常数（如零）
 - `!(x ^ y)` 判断两数是否相等
 - `补码 = [](int x) { return (~x) + 1; }`
+- 超出位数的位移运算是未定义行为，在某些编译器上位移运算会取模处理（不要在其他地方使用该性质）
+- `NaN`: `sign`=0/1, `exponent`=all 1s, `mantisa!=0`
+- `inf`: `sign`=0/1, `exponent`=all 1s, `mantisa`=0
 - 熟练运用德摩根律
 
 ## Solutions
@@ -21,7 +24,7 @@
 
 ### thirdBits
 
-一开始做的时候有一个歧义，每三位一个1的1从哪里开始。剩下的就是定义变量指数级复制。
+一开始做的时候有一个歧义，每三位一个1的1从哪里开始。解决完歧义后剩下的就是定义变量，指数级复制。（在 [logicalNeg](#logicalNeg) 证明了以 `2` 为底是最优解）
 
 ### fitsShort
 
@@ -114,6 +117,10 @@ return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 
 ### float_neg
 
+![IEEE 754]("/Users/huyiwen/Downloads/ieee754.png")
+
+一开始直接异或最高位，没有考虑 `NaN` 的情况。
+
 ### logicalNeg
 
 暴力思路：判断每一位有没有值。$\log_m(32)\times 2(m-1)$ 次运算有点多，其中 $m$ 表示以多少为底数（$2$ 时取得最小值 $10$）。
@@ -124,8 +131,33 @@ return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 
 ### isGreater
 
+一开始用减法判断，发现会溢出~~，遂暴力 `(x >> 2) + (x & 3)`，但显然不是正解~~。
+
+```cpp
+```
+
 ### logicalShift
 
+第一思路就是构造符号位的mask，抵消填充符号位带来的影响：
 
+```cpp
+int msk_sign = ((x >> 31) << (~n)) << 1;
+return msk_sign ^ (x >> n);
+```
+
+这里 `n == 31` 左移 `32` 的情况需要拆分成左移 `31+1` 位。考虑优化：
+
+### trueThreeFourths
+
+损失量的主要规律是 `3->2`，`2->1`，`1->0`。需要一点一点磨细节：
+- `(~(x >> 31))` 是正负的特判
+- `!two` 是0的特判
+
+```cpp
+int y = x >> 2;
+int two = x & 0x3;
+int min = two + (~(x >> 31)) + !two;
+return (y << 1) + y + min;
+```
 
 ## References

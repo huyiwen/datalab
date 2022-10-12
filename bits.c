@@ -321,7 +321,11 @@ int divpwr2(int x, int n) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
-   return 2;
+    if ((uf & 0x7FFFFFFFU) > 0x7F800000U) {
+        return uf;
+    } else {
+        return uf ^ (1u << 31);
+    }
 }
 
 /*
@@ -379,8 +383,8 @@ int isGreater(int x, int y) {
  *   Rating: 3
  */
 int logicalShift(int x, int n) {
-    int tmp = (x >> 31) << (~n + 33);
-    return tmp ^ (x >> n);
+    int msk_sign = ((x >> 31) << (~n)) << 1;
+    return msk_sign ^ (x >> n);
 }
 
 /*
