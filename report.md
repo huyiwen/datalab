@@ -141,7 +141,15 @@ else
 
 一开始用减法判断，发现会溢出~~，遂暴力 `(x >> 2) + (x & 3)`，但显然不是正解~~。最重要是判断符号位。
 
+用位运算来模拟条件语句，排除掉下溢出的情况，上溢出和减法为为“真”时满足返回条件。
+
 ```cpp
+int ry = ~y;
+int sub = x + ry;  // x+ y-
+int min_overflow = x & ry;  // x- y+
+int max_overflow = x ^ ry;  // x- y- or x+ y+
+int sign = (min_overflow | (sub & max_overflow)) >> 31;
+return !sign;
 ```
 
 ### logicalShift
@@ -170,10 +178,27 @@ int _over = over & ((1 << 31) + (double_x >> 31));
 return _double_x | _over;
 ```
 
-~~直觉来说是可以优化的，每个式子展开，~~然而并不能优化。
-
+~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。
 
 ### subOK
+
+一开始觉得和 [isGreater](#isgreater) 很像：$Tmin <= x - y <= Tmax \implies 0 <= x - y + Tmax + 1$ 但是发现不是那么好做。列出 x 和 y 的真值表：
+
+| **x** | **y** | **safe** | **overflow** |
+|:-----:|:-----:|:--------:|:------------:|
+| \+    | \+    | ?        | x            |
+| \+    | \-    | \+       | \-           |
+| \-    | \+    | \-       | \+           |
+| \-    | \-    | ?        | x            |
+
+
+
+```cpp
+int ry = ~y;
+int res = x + ry + 1;
+int sign = ((x ^ y) & (x ^ res)) >> 31;
+return !sign;
+```
 
 ### trueThreeFourths
 
@@ -192,5 +217,23 @@ int two = (x & 0x3);
 int min = two + (~sign^two);
 return (y << 1) + y + min;
 ```
+
+### isPower2
+
+判断是否只有一个 1 且不是 Tmin。一个有趣的性质：$(\cdots 100000)_2 - 1 = (\cdots 011111)$ 即从右向左数第一个 1 开始，右边的位全部取反。如果只有一个 1 那么没有交集，若有多个则有交集。
+
+```cpp
+int intersection = x & (x + (~0));
+return !(intersection | !(x ^ (1 << 31)));
+```
+
+判断不是 Tmin 除了直接比较还可以强制右移变成 0：
+
+```cpp
+int intersection = x & (x + (~0));
+return !(intersection | !(x << 1))
+```
+
+###
 
 ## References

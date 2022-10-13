@@ -416,9 +416,10 @@ int satMul2(int x) {
  *   Rating: 3
  */
 int subOK(int x, int y) {
-    int res = x + (~y) + 1;
-    int sign = ((x ^ y) & (x ^ res)) >> 31;
-    return !sign;
+    int ry = ~y;
+    int res = x + ry + 1;
+    int sign = ((x ^ ry) | (y ^ res)) >> 31;
+    return sign & 1;
 }
 
 /*
@@ -448,7 +449,8 @@ int trueThreeFourths(int x) {
  *   Rating: 4
  */
 int isPower2(int x) {
-  return 2;
+    int intersection = x & (x + (~0));
+    return !(intersection | !(x ^ (1 << 31)));
 }
 
 /*
