@@ -450,7 +450,7 @@ int trueThreeFourths(int x) {
  */
 int isPower2(int x) {
     int intersection = x & (x + (~0));
-    return !(intersection | !(x ^ (1 << 31)));
+    return !(intersection | !(x << 1));
 }
 
 /*
@@ -463,7 +463,7 @@ int isPower2(int x) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-  return 2;
+    return 2;
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -479,7 +479,19 @@ unsigned float_i2f(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+    int _x = (x >> 31) ^ x;
+
+    int pos16 = (!!(_x >> 16)) << 4;
+    _x >>= pos16;
+    int pos8 = (!!(_x >> 8)) << 3;
+    _x >>= pos8;
+    int pos4 = (!!(_x >> 4)) << 2;
+    _x >>= pos4;
+    int pos2 = (!!(_x >> 2)) << 1;
+    _x >>= pos2;
+    int pos1 = _x >> 1;
+    _x >>= pos1;
+    return pos16 + pos8 + pos4 + pos2 + pos1 + 2;;
 }
 
 /*

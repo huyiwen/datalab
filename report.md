@@ -227,13 +227,21 @@ int intersection = x & (x + (~0));
 return !(intersection | !(x ^ (1 << 31)));
 ```
 
-判断不是 Tmin 除了直接比较还可以强制右移变成 0：
+类似 [isTmax](#istmax) ， 判断不是 Tmin 除了直接比较还可以强制右移变成 0：`!(x << 1)`
+
+### float_i2f
+
+
+
+### howManyBits
+
+一开始以为是 [fitsBits](#fitsbits) 的翻版，~~结果看到 max ops = 90……~~ 一步一步下手。首先排除符号位影响：`int _x = (x >> 31) ^ x;` ~~然后获得最高位的 1 ~~然后用二分法计算最高位的 1 的位置。
 
 ```cpp
-int intersection = x & (x + (~0));
-return !(intersection | !(x << 1))
 ```
 
-###
+### float_half
+
+
 
 ## References
