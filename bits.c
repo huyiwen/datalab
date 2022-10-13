@@ -366,12 +366,12 @@ int bitMask(int highbit, int lowbit) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-    int m = (x >> 2) + (x & 3);
-    int n = (y >> 2) + (y & 3);
-    int diff = n + (~m) + 2;
-    int sign = diff >> 31;
-    diff = !(((diff + sign) ^ sign) + diff);
-    return diff;
+    int ry = ~y;
+    int sub = x + ry;
+    int min_overflow = x & ry;  // x- y+
+    int max_overflow = x ^ ry;  // x- y- or x+ y+
+    int sign = (min_overflow | (sub & max_overflow)) >> 31;
+    return !sign;
 }
 
 /*
@@ -397,7 +397,7 @@ int logicalShift(int x, int n) {
  *   Rating: 3
  */
 int satMul2(int x) {
-  return 2;
+    return 2;
 }
 
 /*
@@ -409,7 +409,9 @@ int satMul2(int x) {
  *   Rating: 3
  */
 int subOK(int x, int y) {
-  return 2;
+    int res = x + (~y) + 1;
+    int sign = ((x ^ y) & (x ^ res)) >> 31;
+    return !sign;
 }
 
 /*
@@ -424,8 +426,9 @@ int subOK(int x, int y) {
  */
 int trueThreeFourths(int x) {
     int y = x >> 2;
+    int _two = (x >> 31) & 0x3;
     int two = x & 0x3;
-    int min = two + (~(x >> 31)) + !two;
+    int min = (two + two + two + _two) >> 2;
     return (y << 1) + y + min;
 }
 

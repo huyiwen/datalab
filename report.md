@@ -14,7 +14,8 @@
 - 超出位数的位移运算是未定义行为，在某些编译器上位移运算会取模处理（不要在其他地方使用该性质）
 - `NaN`: `sign`=0/1, `exponent`=all 1s, `mantisa!=0`
 - `inf`: `sign`=0/1, `exponent`=all 1s, `mantisa`=0
-- 熟练运用德摩根律
+- 熟练运用离散数学
+  - `(~x) ^ y == ~(x ^ y)`
 
 ## Solutions
 
@@ -121,6 +122,13 @@ return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 
 一开始直接异或最高位，没有考虑 `NaN` 的情况。
 
+```cpp
+if ((uf & 0x7FFFFFFFU) > 0x7F800000U)
+    return uf;
+else
+    return uf ^ (1u << 31);
+```
+
 ### logicalNeg
 
 暴力思路：判断每一位有没有值。$\log_m(32)\times 2(m-1)$ 次运算有点多，其中 $m$ 表示以多少为底数（$2$ 时取得最小值 $10$）。
@@ -147,16 +155,25 @@ return msk_sign ^ (x >> n);
 
 这里 `n == 31` 左移 `32` 的情况需要拆分成左移 `31+1` 位。考虑优化：
 
+### satMut2
+
+### subOK
+
 ### trueThreeFourths
 
-损失量的主要规律是 `3->2`，`2->1`，`1->0`。需要一点一点磨细节：
-- `(~(x >> 31))` 是正负的特判
-- `!two` 是0的特判
+损失量 `f(two) -> min` 的主要规律是：
+
+1. 正数：`f_3(3)=2`，`f_3(2)=1`，`f_3(1)=0`，`f_3(0)=0`
+2. 负数：`f_0(3)=3`，`f_0(2)=2`，`f_0(1)=1`，`f_0(0)=0`
+
+直接构造：
 
 ```cpp
 int y = x >> 2;
-int two = x & 0x3;
-int min = two + (~(x >> 31)) + !two;
+int sign = x >> 31;
+int two = (x & 0x3);
+// int min = two + ~(sign^~two);
+int min = two + (~sign^two);
 return (y << 1) + y + min;
 ```
 

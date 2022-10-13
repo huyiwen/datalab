@@ -9,7 +9,7 @@
 int main ()
 {
     while(1) {
-        int num = -1;
+        int num = 2;
         if (num > 0) {
             int x, y, m, n, ans;
             if (num == 1) scanf("%d", &x), y = m = n = x;
@@ -17,11 +17,20 @@ int main ()
             else if (num == 3) scanf("%d%d%d", &x, &n, &m);
             int highbit = x, lowbit = n;
 
-            int tmp = ((x >> 31) << (~n + 32)) << 1;
-            int ret = tmp ^ (x >> n);
-            print(32 + ~n);
-            print(tmp);
-            print(ret);
+            int ry = ~y;
+            int sub = x + ry;
+            int min_overflow = x & ry;  // x- y+
+            int max_overflow = x ^ ry;  // x- y- or x+ y+
+            int sign = (min_overflow | (sub & max_overflow)) >> 31;
+            // t s 0  1
+            // 0   0  0
+            // 1   -1 0
+            print(sub);
+            print(min_overflow);
+            print(max_overflow);
+            print(!sign);
+
+
         } else {
             unsigned int x, y, m, n, ans;
             if (num == -1) scanf("%u", &x), y = m = n = x;
