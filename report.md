@@ -139,7 +139,7 @@ else
 
 ### isGreater
 
-一开始用减法判断，发现会溢出~~，遂暴力 `(x >> 2) + (x & 3)`，但显然不是正解~~。
+一开始用减法判断，发现会溢出~~，遂暴力 `(x >> 2) + (x & 3)`，但显然不是正解~~。最重要是判断符号位。
 
 ```cpp
 ```
@@ -156,6 +156,22 @@ return msk_sign ^ (x >> n);
 这里 `n == 31` 左移 `32` 的情况需要拆分成左移 `31+1` 位。考虑优化：
 
 ### satMut2
+
+判断是否溢出就是判断符号位和第31位是否相同。Vanilla版本：
+
+```cpp
+int double_x = x << 1;
+int over = (double_x ^ x) >> 31;
+
+int _double_x = (~over) & double_x;
+// overflow: 0  else: double_x
+int _over = over & ((1 << 31) + (double_x >> 31));
+// overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
+return _double_x | _over;
+```
+
+~~直觉来说是可以优化的，每个式子展开，~~然而并不能优化。
+
 
 ### subOK
 

@@ -324,7 +324,7 @@ unsigned float_neg(unsigned uf) {
     if ((uf & 0x7FFFFFFFU) > 0x7F800000U) {
         return uf;
     } else {
-        return uf ^ (1u << 31);
+        return uf ^ (0x80000000U);
     }
 }
 
@@ -367,7 +367,7 @@ int bitMask(int highbit, int lowbit) {
  */
 int isGreater(int x, int y) {
     int ry = ~y;
-    int sub = x + ry;
+    int sub = x + ry;  // x+ y-
     int min_overflow = x & ry;  // x- y+
     int max_overflow = x ^ ry;  // x- y- or x+ y+
     int sign = (min_overflow | (sub & max_overflow)) >> 31;
@@ -397,7 +397,14 @@ int logicalShift(int x, int n) {
  *   Rating: 3
  */
 int satMul2(int x) {
-    return 2;
+    int double_x = x << 1;
+    int over = (double_x ^ x) >> 31;
+
+    int _double_x = (~over) & double_x;
+    // overflow: 0  else: double_x
+    int _over = over & ((1 << 31) + (double_x >> 31));
+    // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
+    return _double_x | _over;
 }
 
 /*
