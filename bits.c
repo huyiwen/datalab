@@ -397,12 +397,12 @@ int logicalShift(int x, int n) {
  *   Rating: 3
  */
 int satMul2(int x) {
-    int double_x = x << 1;
-    int over = (double_x ^ x) >> 31;
+    volatile int double_x = x << 1;
+    volatile int over = (double_x ^ x) >> 31;
 
-    int _double_x = (~over) & double_x;
+    volatile int _double_x = (~over) & double_x;
     // overflow: 0  else: double_x
-    int _over = over & ((1 << 31) + (double_x >> 31));
+    volatile int _over = over & ((1 << 31) + (double_x >> 31));
     // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
     return _double_x | _over;
 }
@@ -463,7 +463,30 @@ int isPower2(int x) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
+        unsigned sign = 0;
+    unsigned exponent = 159;
+    unsigned mantissa = x;
+    unsigned round = 0;
+    if (x == 0) {
+        return 0;
+    } else if (x < 0) {
+        sign = 0x80000000U;
+        mantissa = -x;
+    }
+    while (1) {
+        unsigned tmp = mantissa;
+        mantissa <<= 1;
+        exponent--;
+        if (tmp >= 0x80000000U) {
+            break;
+        }
+    }
+    if (mantissa & 0x100U) {  // 5
+        if (mantissa & 0x2FFU) {  // even or >5
+            round = 1;
+        }
+    }
+    return sign + (exponent << 23) + (mantissa >> 9) + round;
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -491,7 +514,7 @@ int howManyBits(int x) {
     _x >>= pos2;
     int pos1 = _x >> 1;
     _x >>= pos1;
-    return pos16 + pos8 + pos4 + pos2 + pos1 + 2;;
+    return pos16 + pos8 + pos4 + pos2 + pos1 + 2;
 }
 
 /*

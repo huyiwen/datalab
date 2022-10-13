@@ -168,12 +168,12 @@ return msk_sign ^ (x >> n);
 判断是否溢出就是判断符号位和第31位是否相同。Vanilla版本：
 
 ```cpp
-int double_x = x << 1;
-int over = (double_x ^ x) >> 31;
+volatile int double_x = x << 1;
+volatile int over = (double_x ^ x) >> 31;
 
-int _double_x = (~over) & double_x;
+volatile int _double_x = (~over) & double_x;
 // overflow: 0  else: double_x
-int _over = over & ((1 << 31) + (double_x >> 31));
+volatile int _over = over & ((1 << 31) + (double_x >> 31));
 // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
 return _double_x | _over;
 ```
@@ -235,9 +235,22 @@ return !(intersection | !(x ^ (1 << 31)));
 
 ### howManyBits
 
-一开始以为是 [fitsBits](#fitsbits) 的翻版，~~结果看到 max ops = 90……~~ 一步一步下手。首先排除符号位影响：`int _x = (x >> 31) ^ x;` ~~然后获得最高位的 1 ~~然后用二分法计算最高位的 1 的位置。
+一开始以为是 [fitsBits](#fitsbits) 的翻版，~~结果看到 max ops = 90……~~ 一步一步下手。首先排除符号位影响：`int _x = (x >> 31) ^ x;` ~~然后获得最高位的 1 ~~然后用二分法计算最高位的 1 的位置（需要注意 0 的情况）。
 
 ```cpp
+int _x = (x >> 31) ^ x;
+
+int pos16 = (!!(_x >> 16)) << 4;
+_x >>= pos16;
+int pos8 = (!!(_x >> 8)) << 3;
+_x >>= pos8;
+int pos4 = (!!(_x >> 4)) << 2;
+_x >>= pos4;
+int pos2 = (!!(_x >> 2)) << 1;
+_x >>= pos2;
+int pos1 = _x >> 1;
+_x >>= pos1;
+return pos16 + pos8 + pos4 + pos2 + pos1 + 1 + _x;
 ```
 
 ### float_half
