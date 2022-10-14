@@ -119,7 +119,7 @@ return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 
 ### float_neg
 
-![IEEE 754]("/Users/huyiwen/Downloads/ieee754.png")
+![ieee754](/Users/huyiwen/Downloads/ieee754.png)
 
 一开始直接异或最高位，没有考虑 `NaN` 的情况。
 
@@ -182,14 +182,27 @@ return msk_sign ^ (x >> n);
 volatile int double_x = x << 1;
 volatile int over = (double_x ^ x) >> 31;
 
-volatile int _double_x = (~over) & double_x;
+volatile int tmp_over = ~over;
+volatile int tmax = ~(1 << 31);
+volatile int tmp_sign = x >> 31;
+volatile int tmp_sum = tmax ^ tmp_sign;
+
+volatile int _double_x = tmp_over & double_x;
 // overflow: 0  else: double_x
-volatile int _over = over & ((1 << 31) + (double_x >> 31));
+volatile int _over = over & tmp_sum;
 // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
 return _double_x | _over;
 ```
 
-~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。神奇的事情是加了 `volatile` 依然出现本地和服务器结果不同，原因是一些中间变量仍然是没有被 `volatile` 修饰的。
+~~直觉来说是可以优化的，每个式子展开。~~然而直接展开很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。
+
+```cpp
+volatile int tmp_min = 1 << 31;
+volatile int tmp_sign = double_x >> 31;
+volatile int tmp_sum = tmp_min + tmp_sign;
+```
+
+神奇的事情是加了 `volatile` 依然出现本地和服务器结果不同，原因是一些中间变量仍然是没有被 `volatile` 修饰的。
 
 ### subOK
 
