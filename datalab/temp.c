@@ -4,8 +4,43 @@
 #define fprint(xx) printf(#xx ":\t%08x %u %.16f\n", (xx), (xx), (*(float*)&xx));
 
 unsigned f (int x) {
-    volatile int _x = (x >> 31) ^ x;
+    unsigned sign = 0;
+    unsigned exponent = 159;
+    unsigned mantissa = x;
+    unsigned tmp;
+    if (x < 0) {
+        sign = 0x80000000U;
+        mantissa = -x;
+    }
 
+    int cnt = 0;
+    while (exponent) {
+        cnt ++;
+        tmp = mantissa;
+        mantissa <<= 1;
+        exponent--;
+        if (tmp >= 0x80000000U) {
+            break;
+        }
+    }
+    print(cnt);
+    print(mantissa);
+    print(exponent);
+    return sign + (exponent << 23) + (mantissa >> 9) + ((mantissa & 0x100U) && (mantissa & 0x2FFU));
+}
+
+unsigned ff (int x) {
+    unsigned sign = 0;
+    unsigned exponent = 158;
+    unsigned mantissa = x, _x = x;
+    unsigned tmp;
+    if (x < 0) {
+        sign = 0x80000000U;
+        _x = mantissa = -x;
+    }
+    if (x == 0) {
+        return 0;
+    }
     int pos16 = (!!(_x >> 16)) << 4;
     _x >>= pos16;
     int pos8 = (!!(_x >> 8)) << 3;
@@ -14,31 +49,25 @@ unsigned f (int x) {
     _x >>= pos4;
     int pos2 = (!!(_x >> 2)) << 1;
     _x >>= pos2;
-    print(_x);
-    _x = ！
-    print(_x);
-    return pos16 + pos8 + pos4 + pos2 + _x;
-}
-
-unsigned ff (unsigned uf) {
-    unsigned exponents = 0x7f800000U;
-    unsigned div_man = 0x800000U;
-    unsigned _sign = 0x80000000U & uf;
-    unsigned uf_exp = uf & exponents;
-    if (uf_exp == exponents) {
-        return uf;
-    } else if (uf_exp > div_man) {
-        return uf - div_man;
-    } else {
-        unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
-        return _sign | div_exp;
-    }
+    int pos1 = _x >> 1;
+    _x >>= pos1;
+    int pos = pos16 + pos8 + pos4 + pos2 + pos1 + _x;
+    print(pos);
+    int diff = 33 + ~pos;
+    print(diff);
+    print(mantissa);
+    mantissa <<= diff;
+    mantissa <<= 1;
+    print(mantissa);
+    exponent -= diff;
+    print(exponent);
+    return sign + (exponent << 23) + (mantissa >> 9) + ((mantissa & 0x100U) && (mantissa & 0x2FFU));
 }
 
 
 int main ()
 {
-    while(1) {
+    while(1){
         int num = 1;
         if (num > 0) {
             int x, y, m, n, ans;
@@ -46,8 +75,15 @@ int main ()
             else if (num == 2) scanf("%d%d", &x, &n), y = n;
             else if (num == 3) scanf("%d%d%d", &x, &n, &m);
 
-            int ret = f(x);
+            int quarter = x >> 2;
+            int sign = x >> 31;
+            int two = x & 0x3;
+            print(two);
+            int min = two + ((sign & 1) | !two) + ~0;
+            print(min);
+            int ret = (quarter << 1) + quarter + min;
             print(ret);
+
 
 
         } else {
@@ -60,7 +96,6 @@ int main ()
             fprint(ret);
 
         }
-
 
     }
     return 0;

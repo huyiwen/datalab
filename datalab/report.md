@@ -16,6 +16,7 @@
 - `inf`: `sign`=0/1, `exponent`=all 1s, `mantisa`=0
 - 熟练运用离散数学
   - `(~x) ^ y == ~(x ^ y)`
+- IEEE754 标准
 
 ## Solutions
 
@@ -123,10 +124,11 @@ return x ^ (mix << octuple_m) ^ (mix << octuple_n);
 一开始直接异或最高位，没有考虑 `NaN` 的情况。
 
 ```cpp
-if ((uf & 0x7FFFFFFFU) > 0x7F800000U)
+if ((uf & 0x7FFFFFFFU) > 0x7F800000U) {
     return uf;
-else
-    return uf ^ (1u << 31);
+} else {
+    return uf ^ 0x80000000U;
+}
 ```
 
 ### logicalNeg
@@ -136,6 +138,15 @@ else
 聪明思路：与 [isTmax](#istmax) 类似，本题找 `0` 的特征：`(~0) == Tmin`, `Tmin + 1 == Tmax`。其中最重要的特征是 `补码(0) == 0 && 补码(Tmin) == Tmin`，不改变符号位。 `((x | ((~x) + 1)) >> 31) + 1`
 
 ### bitMask
+
+首先获取截止到高位的 Mask ：
+
+```cpp
+int sign = ~1;
+int mask = ~(sign << highbit);
+```
+
+这里的优化用 `~1` 免除减一操作。接着右移左移移除低位多余 Mask。
 
 ### isGreater
 
@@ -178,7 +189,7 @@ volatile int _over = over & ((1 << 31) + (double_x >> 31));
 return _double_x | _over;
 ```
 
-~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。神奇的事情是加了 `volatile` 依然出现本地和服务器结果不同。
+~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。神奇的事情是加了 `volatile` 依然出现本地和服务器结果不同，原因是一些中间变量仍然是没有被 `volatile` 修饰的。
 
 ### subOK
 
@@ -186,12 +197,12 @@ return _double_x | _over;
 
 | **x** | **y** | **safe** | **overflow** |
 |:-----:|:-----:|:--------:|:------------:|
-| \+    | \+    | ?        | x            |
+| \+    | \+    | ?        | 不会溢出       |
 | \+    | \-    | \+       | \-           |
 | \-    | \+    | \-       | \+           |
-| \-    | \-    | ?        | x            |
+| \-    | \-    | ?        | 不会溢出       |
 
-
+可以找到其中的规律。
 
 ```cpp
 int ry = ~y;
@@ -210,13 +221,14 @@ return !sign;
 直接构造：
 
 ```cpp
-int y = x >> 2;
+int quarter = x >> 2;
 int sign = x >> 31;
 int two = (x & 0x3);
-// int min = two + ~(sign^~two);
-int min = two + (~sign^two);
-return (y << 1) + y + min;
+int min = two + ((sign & 1) | !two) + ~0;
+return (quarter << 1) + quarter + min;
 ```
+
+但是 op 数比较多，而且很难优化。换一个思路来想，考虑公式 $x * 3 / 4 == quarter * 3 / 4 + two * 3 / 4$ 其中 $two * 3 / 4$ 不会溢出可以先乘后除：`int min = (two + two + two + _two) >> 2;`
 
 ### isPower2
 
@@ -231,15 +243,39 @@ return !(intersection | !(x ^ (1 << 31)));
 
 ### float_i2f
 
+这道题直接模拟整型转浮点型的步骤就行，需要精通整套步骤包括 IEEE754、四舍六入五成双、负浮点数的储存、规范化等。
 
+首先要模拟 normalized 的步骤。尝试了两种方法，用 while 循环逐个模拟进位，以及用 [howManyBits](#howmanybits) 的方法。但不知道为什么后一种方法 op 数更多）。 ~~竟然直接禁掉了 `goto` ……~~
+
+其次还有一些细节要处理：
+
+- IEEE754标准的负数储存中，mantissa 部分存绝对值，最高位存符号。顺带一提，exponent 的存储方式类似“补码”，但是其“符号位”与一般有符号数的“符号位”相反。
+- 而进位以 `((mantissa & 0x100U) && (mantissa & 0x2FFU))` 为条件，需要同时满足“五”和“六入或成双”（不能将两个条件合并）。
+
+```cpp
+unsigned sign = 0;
+unsigned exponent = 159;
+unsigned mantissa = x;
+if (x < 0) {
+    sign = 0x80000000U;
+    mantissa = -x;
+}
+while (exponent) {
+    unsigned tmp = mantissa;
+    mantissa <<= 1;
+    exponent--;
+    if (tmp >= 0x80000000U) {
+        break;
+    }
+}
+return sign + (exponent << 23) + (mantissa >> 9) + ((mantissa & 0x100U) && (mantissa & 0x2FFU));
+```
 
 ### howManyBits
 
 一开始以为是 [fitsBits](#fitsbits) 的翻版，~~结果看到 max ops = 90……~~ 一步一步下手。首先排除符号位影响：`int _x = (x >> 31) ^ x;` ~~然后获得最高位的 1 ~~然后用二分法计算最高位的 1 的位置（需要注意 0 的情况）。
 
 ```cpp
-int _x = (x >> 31) ^ x;
-
 int pos16 = (!!(_x >> 16)) << 4;
 _x >>= pos16;
 int pos8 = (!!(_x >> 8)) << 3;
@@ -248,13 +284,33 @@ int pos4 = (!!(_x >> 4)) << 2;
 _x >>= pos4;
 int pos2 = (!!(_x >> 2)) << 1;
 _x >>= pos2;
-int pos1 = _x >> 1;
+int pos1 = !!(_x >> 1);  // _x >> 1;
 _x >>= pos1;
 return pos16 + pos8 + pos4 + pos2 + pos1 + 1 + _x;
 ```
 
+一些失败（ op 数更多）的优化尝试：
+
+```cpp
+...
+_x >>= pos2;
+_x += !(~_x);
+return pos16 + pos8 + pos4 + pos2 + pos1 + _x;
+```
+
 ### float_half
 
+分两种情况，exponent 除二以及 mantisa 除二。
 
-
-## References
+```cpp
+unsigned exponents = 0x7f800000U;
+unsigned div_man = 0x00800000U;
+unsigned _sign = 0x80000000U & uf;
+unsigned uf_exp = uf & exponents;
+if (uf_exp > div_man) {
+    return uf - div_man * (uf_exp != exponents);
+} else {
+    unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
+    return _sign | div_exp;
+}
+```

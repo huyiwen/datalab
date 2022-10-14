@@ -401,15 +401,18 @@ int satMul2(volatile int x) {
     volatile int double_x = x << 1;
     volatile int over = (double_x ^ x) >> 31;
 
-    /*
-    volatile int _double_x = (~over) & double_x;
+    volatile int tmp_over = ~over;
+    volatile int tmp_min = 1 << 31;
+    volatile int tmp_sign = double_x >> 31;
+    volatile int tmp_sum = tmp_min + tmp_sign;
+
+    volatile int _double_x = tmp_over & double_x;
     // overflow: 0  else: double_x
-    volatile int _over = over & ((1 << 31) + (double_x >> 31));
+    volatile int _over = over & tmp_sum;
     // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
     volatile int ans = _double_x | _over;
     return ans;
-    */
-    return ((~over) & double_x) | (over & ((1 << 31) + (double_x >> 31)));
+    // return ((~over) & double_x) | (over & ((1 << 31) + (double_x >> 31)));
 }
 
 /*
@@ -468,17 +471,14 @@ int isPower2(int x) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-        unsigned sign = 0;
+    unsigned sign = 0;
     unsigned exponent = 159;
     unsigned mantissa = x;
-    unsigned round = 0;
-    if (x == 0) {
-        return 0;
-    } else if (x < 0) {
+    if (x < 0) {
         sign = 0x80000000U;
         mantissa = -x;
     }
-    while (1) {
+    while (exponent) {
         unsigned tmp = mantissa;
         mantissa <<= 1;
         exponent--;
@@ -486,10 +486,7 @@ unsigned float_i2f(int x) {
             break;
         }
     }
-    if ((mantissa & 0x100U) && (mantissa & 0x2FFU)) {  // (5) && (even or >5)
-        round = 1;
-    }
-    return sign + (exponent << 23) + (mantissa >> 9) + round;
+    return sign + (exponent << 23) + (mantissa >> 9) + ((mantissa & 0x100U) && (mantissa & 0x2FFU));
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -533,13 +530,11 @@ int howManyBits(int x) {
  */
 unsigned float_half(unsigned uf) {
     unsigned exponents = 0x7f800000U;
-    unsigned div_man = 0x800000U;
+    unsigned div_man = 0x00800000U;
     unsigned _sign = 0x80000000U & uf;
     unsigned uf_exp = uf & exponents;
-    if (uf_exp == exponents) {
-        return uf;
-    } else if (uf_exp > div_man) {
-        return uf - div_man;
+    if (uf_exp > div_man) {
+        return uf - div_man * (uf_exp != exponents);
     } else {
         unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
         return _sign | div_exp;
