@@ -178,7 +178,7 @@ volatile int _over = over & ((1 << 31) + (double_x >> 31));
 return _double_x | _over;
 ```
 
-~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。
+~~直觉来说是可以优化的，每个式子展开。~~然而并很难能优化，因为与 [isGreater](#isgreater) 有异曲同工之妙，利用位运算模拟条件语句。神奇的事情是加了 `volatile` 依然出现本地和服务器结果不同。
 
 ### subOK
 

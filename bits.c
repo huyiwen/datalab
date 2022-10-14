@@ -1,3 +1,4 @@
+#pragma optimize( "", off )
 /*
  * CS:APP Data Lab
  *
@@ -396,15 +397,19 @@ int logicalShift(int x, int n) {
  *   Max ops: 20
  *   Rating: 3
  */
-int satMul2(int x) {
+int satMul2(volatile int x) {
     volatile int double_x = x << 1;
     volatile int over = (double_x ^ x) >> 31;
 
+    /*
     volatile int _double_x = (~over) & double_x;
     // overflow: 0  else: double_x
     volatile int _over = over & ((1 << 31) + (double_x >> 31));
     // overflow: 0x7FFFFFFF(+)  0x80000000(-)  else: 0
-    return _double_x | _over;
+    volatile int ans = _double_x | _over;
+    return ans;
+    */
+    return ((~over) & double_x) | (over & ((1 << 31) + (double_x >> 31)));
 }
 
 /*
@@ -481,10 +486,8 @@ unsigned float_i2f(int x) {
             break;
         }
     }
-    if (mantissa & 0x100U) {  // 5
-        if (mantissa & 0x2FFU) {  // even or >5
-            round = 1;
-        }
+    if ((mantissa & 0x100U) && (mantissa & 0x2FFU)) {  // (5) && (even or >5)
+        round = 1;
     }
     return sign + (exponent << 23) + (mantissa >> 9) + round;
 }
@@ -502,7 +505,7 @@ unsigned float_i2f(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-    int _x = (x >> 31) ^ x;
+    volatile int _x = (x >> 31) ^ x;
 
     int pos16 = (!!(_x >> 16)) << 4;
     _x >>= pos16;
@@ -514,7 +517,7 @@ int howManyBits(int x) {
     _x >>= pos2;
     int pos1 = _x >> 1;
     _x >>= pos1;
-    return pos16 + pos8 + pos4 + pos2 + pos1 + 2;
+    return pos16 + pos8 + pos4 + pos2 + pos1 + 1 + _x;
 }
 
 /*
@@ -529,5 +532,16 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned float_half(unsigned uf) {
-  return 2;
+    unsigned exponents = 0x7f800000U;
+    unsigned div_man = 0x800000U;
+    unsigned _sign = 0x80000000U & uf;
+    unsigned uf_exp = uf & exponents;
+    if (uf_exp == exponents) {
+        return uf;
+    } else if (uf_exp > div_man) {
+        return uf - div_man;
+    } else {
+        unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
+        return _sign | div_exp;
+    }
 }

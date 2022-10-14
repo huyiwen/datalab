@@ -1,33 +1,38 @@
 #include<stdio.h>
 
 #define print(xx) printf(#xx ":\t%08x %d\n", (xx), (xx));
-#define fprint(xx) printf(#xx ":\t%08x %u %f\n", (xx), (xx), (*(float*)&xx));
+#define fprint(xx) printf(#xx ":\t%08x %u %.16f\n", (xx), (xx), (*(float*)&xx));
 
 unsigned f (int x) {
-    unsigned sign = 0;
-    unsigned exponent = 159;
-    unsigned mantissa = x;
-    unsigned round = 0;
-    if (x == 0) {
-        return 0;
-    } else if (x < 0) {
-        sign = 0x80000000U;
-        mantissa = -x;
+    volatile int _x = (x >> 31) ^ x;
+
+    int pos16 = (!!(_x >> 16)) << 4;
+    _x >>= pos16;
+    int pos8 = (!!(_x >> 8)) << 3;
+    _x >>= pos8;
+    int pos4 = (!!(_x >> 4)) << 2;
+    _x >>= pos4;
+    int pos2 = (!!(_x >> 2)) << 1;
+    _x >>= pos2;
+    print(_x);
+    _x = ！
+    print(_x);
+    return pos16 + pos8 + pos4 + pos2 + _x;
+}
+
+unsigned ff (unsigned uf) {
+    unsigned exponents = 0x7f800000U;
+    unsigned div_man = 0x800000U;
+    unsigned _sign = 0x80000000U & uf;
+    unsigned uf_exp = uf & exponents;
+    if (uf_exp == exponents) {
+        return uf;
+    } else if (uf_exp > div_man) {
+        return uf - div_man;
+    } else {
+        unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
+        return _sign | div_exp;
     }
-    while (1) {
-        unsigned tmp = mantissa;
-        mantissa <<= 1;
-        exponent--;
-        if (tmp >= 0x80000000U) {
-            break;
-        }
-    }
-    if (mantissa & 0x100U) {  // 5
-        if (mantissa & 0x2FFU) {  // even or >5
-            round = 1;
-        }
-    }
-    return sign + (exponent << 23) + (mantissa >> 9) + round;
 }
 
 
@@ -42,17 +47,17 @@ int main ()
             else if (num == 3) scanf("%d%d%d", &x, &n, &m);
 
             int ret = f(x);
-            fprint(ret);
+            print(ret);
 
 
         } else {
-            unsigned int x, y, m, n, ans;
-            if (num == -1) scanf("%u", &x), y = m = n = x;
+            unsigned int x, y, m, n, ans, uf;
+            if (num == -1) scanf("%u", &x), uf = y = m = n = x;
             else if (num == -2) scanf("%u%u", &x, &n), y = n;
             else if (num == -3) scanf("%u%u%u", &x, &n, &m);
 
-            x ^= (1 << 31);
-            fprint(x);
+            int ret = ff(x);
+            fprint(ret);
 
         }
 
