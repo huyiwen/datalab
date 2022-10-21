@@ -1,6 +1,9 @@
 #include <iostream>
 
 void swap(int & a, int & b) {
+    if (a == b) {
+        return ;
+    }
     a = a ^ b;
     b = a ^ b;
     a = a ^ b;
@@ -21,7 +24,7 @@ int main() {
     for(int i = 0; i < n; i++) {
         int a, b;
         std::cin >> a >> b;
-        if(a < 0 || a >= n || b < 0 || b >= n) {
+        if(a < 0 || a >= m || b < 0 || b >= m) {
             std::cout << -1 << std::endl;
             return 0;
         }

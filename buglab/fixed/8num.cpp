@@ -84,18 +84,19 @@ int IDS(int max_depth){
         //     2）移动空格位置  nextState->zero_x = curState->zero_x+move_x[i]; nextState->zero_y = curState->zero_y+move_y[i];
         //     3）判断空格移动是否在允许范围 (nextState->zero_x<0||nextState->zero_x>2||nextState->zero_y<0||nextState->zero_y>2)
         //     4）防止状态重复
-        State curs = State(que.top().first);
-        State* curState = &curs;
+        State* curState = new State(que.top().first);
         curDepth = que.top().second;
         que.pop();
         node_num--;
         if(matrix2string(curState->matrix)==matrix2string(goal.matrix))
         {
             int steps = curState->g;
+            State* tmp;
             while(curState){
                 stack_path.push(*curState);
+                tmp = curState;
                 curState = curState->parent;
-                free(curState);
+                delete tmp;
             }
             return steps;
         }

@@ -12,7 +12,7 @@ struct Node {
     Node(ElemTypeA e, ElemTypeB b) : exp(e), base(b) {}
 };
 
-ElemTypeB calcOnce(Node node);
+ElemTypeB calcOnce(const Node& node);
 ElemTypeB calc();
 
 int main() {
@@ -32,7 +32,7 @@ ElemTypeB calc() {
         data[i] = Node(a, b);
     }
 
-    ElemTypeB result;
+    ElemTypeB result(0);
     for(int i = 0; i < n; i++) {
         result += calcOnce(data[i]);
     }
@@ -41,10 +41,15 @@ ElemTypeB calc() {
     return result;
 }
 
-ElemTypeB calcOnce(Node node) {
-    ElemTypeB result;
-    for(int i = 0; i <= node.exp - 1; i++) {
-        result *= node.base;
+ElemTypeB calcOnce(const Node& node) {
+    ElemTypeB result(1), multiplier = node.base;
+    ElemTypeA exp = node.exp;
+    while (exp) {
+        if (exp & 1) {
+            result *= multiplier;
+        }
+        exp >>= 1;
+        multiplier *= multiplier;
     }
 
     return result;

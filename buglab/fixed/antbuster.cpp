@@ -32,11 +32,11 @@ const int dy[]={1,0,-1,0};
 int n;
 int m;
 int t;
-int clk;  // Global clock
-int spn;  // Ant spawn count
-bool END;
+int clk=0;  // Global clock
+int spn=0;  // Ant spawn count
+bool END=false;
 int s,d,r;
-Ant* cakeCarrier;
+Ant* cakeCarrier=NULL;
 int sign[MAXN][MAXN];
 bool visited[MAXN][MAXN];  // If there is ant at the point
 
@@ -112,10 +112,9 @@ void Tower::Fire(){
         return;
     double dx=this->x-target->x;
     double dy=this->y-target->y;
-    double k=dy/dx;
-    double b=this->y-k*this->x;
+    double b=dx*this->y-dy*this->x;
     for(std::list<Ant>::iterator i=ants.begin();i!=ants.end();++i){
-        if(Cross(k,-1.0,b,i->x,i->y)&&InSegment(this->x,this->y,target->x,target->y,i->x,i->y)&&SqrEucDis(this->x,this->y,i->x,i->y)<=SqrEucDis(this->x,this->y,target->x,target->y)){
+        if(Cross(dy,-dx,b,i->x,i->y)&&InSegment(this->x,this->y,target->x,target->y,i->x,i->y)&&SqrEucDis(this->x,this->y,i->x,i->y)<=SqrEucDis(this->x,this->y,target->x,target->y)){
             i->HP-=d;
         }
     }
@@ -162,9 +161,9 @@ void Ant::NormalMove(int dir){
 }
 
 void Ant::SpecialMove(int dir){
-    dir=(dir-1)%4;
+    dir=(dir+3)%4;
     while(!this->CheckAvailable(this->x+dx[dir],this->y+dy[dir]))
-        dir=(dir-1)%4;
+        dir=(dir+3)%4;
     this->NormalMove(dir);
 }
 
@@ -196,7 +195,7 @@ void CleanDeath(){
 void DecreaseSignal(){
     for(int i=0;i<=n;i++){
         for(int j=0;j<=m;j++){
-            --sign[i][j];
+            sign[i][j] -= !!(sign[i][j]);
         }
     }
 }

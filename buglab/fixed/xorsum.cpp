@@ -2,7 +2,7 @@
 
 int n;
 int q;
-int ans;
+int ans=0;
 std::vector<int> v;
 
 int ReadInt(){
@@ -28,8 +28,11 @@ int main(){
         v.push_back(ReadInt());
     for(auto x : v)
         ans ^= x;
-    for(int i=0;i<q;i++)
-        Replace(ReadInt(), ReadInt());
+    for(int i=0;i<q;i++) {
+        int pos = ReadInt();
+        int value = ReadInt();
+        Replace(pos, value);
+    }
     printf("%d\n", ans);
     return 0;
 }

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#define min(a,b) a<=b?a:b
+#define min(a,b) (a)<=(b)?(a):(b)
 
 class price 
 {
@@ -11,6 +11,7 @@ private:
     std::string store;      // store's name
 public:
     price()
+        : n(0)
     {
         store = "Violet";   
         items = new std::string[3]; // I'm poor, max 3 items
@@ -18,13 +19,15 @@ public:
     }
     ~price()
     {
-        delete items;
-        delete prices;
+        delete[] items;
+        delete[] prices;
     }
     void add_item(std::string name, int price) 
     {
-        *items++ = name;
-        *prices++ = price;
+        if (n >= 3) return;
+        *(items + n) = name;
+        *(prices + n) = price;
+        n++;
     }
     void print_items() 
     {
@@ -34,18 +37,20 @@ public:
     }
     int cheapest_item() // suppose only 3 items
     {
-        return min(min(prices[0], prices[1]), prices[2]);
+        int min_price = 1e9;
+        for (int i = 0; i < n; ++i)
+            min_price = min(min_price, prices[i]);
+        return min_price;
     }
 };
 
 int main()
 {
-    price* test = (price*)malloc(sizeof(price));
+    auto test = std::make_unique<price>(price());
     test->add_item("apple", 1);
     test->add_item("banana", 3);
     test->add_item("cherry", 2);
     test->print_items();
     std::cout << "cheapest price: " <<  test->cheapest_item() << std::endl;
-    free(test);
     return 0;
 }

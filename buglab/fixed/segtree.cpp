@@ -10,7 +10,7 @@ struct Node{
 	int l;
 	int r;
 	int add;
-	int sum;
+	long long sum;
 	int size;
 	Node* lch;
 	Node* rch;
@@ -18,7 +18,7 @@ struct Node{
 	Node(int,int);
 	void Maintain();
 	void PushDown();
-	int Query(const int&,const int&);
+	long long Query(const int&,const int&);
 	void Add(const int&,const int&,const int&);
 };
 
@@ -39,7 +39,7 @@ int main(){
 		}
 		else if(t==2){
 			scanf("%d%d",&l,&r);
-			printf("%d\n",N->Query(l,r));
+			printf("%lld\n",N->Query(l,r));
 		}
 	}
     delete N;
@@ -51,8 +51,11 @@ Node::Node(int l,int r){
 	this->r=r;
 	this->add=0;
 	this->size=r-l+1;
-	if(l==r)
+	if(l==r){
 		this->sum=data[r];
+                this->lch=nullptr;
+                this->rch=nullptr;
+        }
 	else{
 		int mid=(l+r)>>1;
 		this->lch=new Node(l,mid);
@@ -83,7 +86,7 @@ void Node::Add(const int& l,const int& r,const int& d){
 	}
 }
 
-int Node::Query(const int& l,const int& r){
+long long Node::Query(const int& l,const int& r){
 	if(l<=this->l&&this->r<=r)
 		return this->sum;
 	else{

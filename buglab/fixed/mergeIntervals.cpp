@@ -6,7 +6,7 @@ struct Range{
 };
 
 bool compare(const Range& x, const Range& y){
-    return x.l <= y.l;
+    return x.l < y.l;
 }
 
 int main(){
@@ -23,7 +23,7 @@ int main(){
     Range last = R[0];
     for(auto it = std::next(R.begin()); it != R.end(); ++it){
         if(it->l <= last.r)
-            last.r = it->r;
+            last.r = std::max(it->r, last.r);
         else{
             ans.push_back(last);
             last = *it;
