@@ -13,8 +13,8 @@
 #include "cachelab.h"
 
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
-void _t_32(int M, int N, int A[N][M], int B[M][N]);
-void _t_64(int M, int N, int A[N][M], int B[M][N]);
+void _t_32(int A[N][M], int B[M][N]);
+void _t_64(int A[N][M], int B[M][N]);
 void _t_gen(int M, int N, int A[N][M], int B[M][N]);
 
 /* 
@@ -26,14 +26,13 @@ void _t_gen(int M, int N, int A[N][M], int B[M][N]);
  */
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N]) {
-    if (M == 32) {
-        _t_32(M, N, A, B);
-    } else if (M == 64) {
-        _t_64(M, N, A, B);
+    if (M == 32 && N == 32) {
+        _t_32(A, B);
+    } else if (M == 64 && N == 64) {
+        _t_64(A, B);
     } else {
         _t_gen(M, N, A, B);
     }
-        
 }
 
 /* 
@@ -41,11 +40,11 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N]) {
  * a simple one below to help you get started. 
  */ 
 
-inline void _t_32(int M, int N, int A[N][M], int B[N][M]) {
+inline void _t_32(int A[N][M], int B[N][M]) {
     int i, gi, gj;
     int t0, t1, t2, t3, t4, t5, t6, t7;
-    for (gi = 0; gi < N; gi += 8) {
-        for (gj = 0; gj < M; gj += 8) {
+    for (gi = 0; gi < 32; gi += 8) {
+        for (gj = 0; gj < 32; gj += 8) {
             for (i = gi; i < gi + 8; i++) {
                 t0 = A[i][gj];
                 t1 = A[i][gj+1];
@@ -70,9 +69,67 @@ inline void _t_32(int M, int N, int A[N][M], int B[N][M]) {
 
 inline void _t_64(int M, int N, int A[N][M], int B[N][M]) {
     int i, gi, gj;
-    int t0, t1, t2, t3;
-    for (gi = 0; gi < N; gi += 4) {
-        for (gj = 0; gj < M; gj += 4) {
+    int t0, t1, t2, t3, t4, t5, t6, t7;
+    for (gi = 0; gi < 32; gi += 8) {
+        for (gj = 0; gj < 32; gj += 8) {
+            for (i = gi; i < gi + 8; i++) {
+                t0 = A[i][gj];
+                t1 = A[i][gj+1];
+                t2 = A[i][gj+2];
+                t3 = A[i][gj+3];
+                t4 = A[i][gj+4];
+                t5 = A[i][gj+5];
+                t6 = A[i][gj+6];
+                t7 = A[i][gj+7];
+                B[gj][i] = t0;
+                B[gj+1][i] = t1;
+                B[gj+2][i] = t2;
+                B[gj+3][i] = t3;
+                B[gj+4][i] = t4;
+                B[gj+5][i] = t5;
+                B[gj+6][i] = t6;
+                B[gj+7][i] = t7;
+            }
+        }
+    }
+    for (gi = 32; gi < 64; gi += 8) {
+        for (gj = 32; gj < 64; gj += 8) {
+            for (i = gi; i < gi + 8; i++) {
+                t0 = A[i][gj];
+                t1 = A[i][gj+1];
+                t2 = A[i][gj+2];
+                t3 = A[i][gj+3];
+                t4 = A[i][gj+4];
+                t5 = A[i][gj+5];
+                t6 = A[i][gj+6];
+                t7 = A[i][gj+7];
+                B[gj][i] = t0;
+                B[gj+1][i] = t1;
+                B[gj+2][i] = t2;
+                B[gj+3][i] = t3;
+                B[gj+4][i] = t4;
+                B[gj+5][i] = t5;
+                B[gj+6][i] = t6;
+                B[gj+7][i] = t7;
+            }
+        }
+    }
+    for (gi = 32; gi < 64; gi += 4) {
+        for (gj = 0; gj < 32; gj += 4) {
+            for (i = gi; i < gi + 4; i++) {
+                t0 = A[i][gj];
+                t1 = A[i][gj+1];
+                t2 = A[i][gj+2];
+                t3 = A[i][gj+3];
+                B[gj][i] = t0;
+                B[gj+1][i] = t1;
+                B[gj+2][i] = t2;
+                B[gj+3][i] = t3;
+            }
+        }
+    }
+    for (gi = 0; gi < 32; gi += 4) {
+        for (gj = 32; gj < 64; gj += 4) {
             for (i = gi; i < gi + 4; i++) {
                 t0 = A[i][gj];
                 t1 = A[i][gj+1];
