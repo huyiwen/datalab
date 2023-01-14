@@ -2,3 +2,13 @@
 password
 a.out
 temp
+test-csim
+test-trans
+csim
+*.o
+.marker
+.csim_results
+trace.*
+trace.tmp
+tracegen
+2021201719-handin.tar

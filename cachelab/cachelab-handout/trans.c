@@ -13,8 +13,8 @@
 #include "cachelab.h"
 
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
-void _t_32(int A[N][M], int B[M][N]);
-void _t_64(int A[N][M], int B[M][N]);
+void _t_32(int A[32][32], int B[32][32]);
+void _t_64(int A[64][64], int B[64][64]);
 void _t_gen(int M, int N, int A[N][M], int B[M][N]);
 
 /* 
@@ -40,7 +40,7 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N]) {
  * a simple one below to help you get started. 
  */ 
 
-inline void _t_32(int A[N][M], int B[N][M]) {
+inline void _t_32(int A[32][32], int B[32][32]) {
     int i, gi, gj;
     int t0, t1, t2, t3, t4, t5, t6, t7;
     for (gi = 0; gi < 32; gi += 8) {
@@ -67,9 +67,10 @@ inline void _t_32(int A[N][M], int B[N][M]) {
     }
 }
 
-inline void _t_64(int M, int N, int A[N][M], int B[N][M]) {
+inline void _t_64(int A[64][64], int B[64][64]) {
     int i, gi, gj;
-    int t0, t1, t2, t3, t4, t5, t6, t7;
+    int t0, t1, t2, t3; // , t4, t5, t6, t7;
+    /* 
     for (gi = 0; gi < 32; gi += 8) {
         for (gj = 0; gj < 32; gj += 8) {
             for (i = gi; i < gi + 8; i++) {
@@ -128,8 +129,9 @@ inline void _t_64(int M, int N, int A[N][M], int B[N][M]) {
             }
         }
     }
-    for (gi = 0; gi < 32; gi += 4) {
-        for (gj = 32; gj < 64; gj += 4) {
+    */
+    for (gi = 0; gi < 64; gi += 4) {
+        for (gj = 0; gj < 64; gj += 4) {
             for (i = gi; i < gi + 4; i++) {
                 t0 = A[i][gj];
                 t1 = A[i][gj+1];
