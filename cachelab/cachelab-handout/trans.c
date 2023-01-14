@@ -93,11 +93,11 @@ inline void _t_64(int A[64][64], int B[64][64]) {
             }
 
             for (k = gj; k < gj + 4; k++) {
-                t0 = B[k][gi+4];
+                t0 = B[k][gi+4];  // retreive
                 t1 = B[k][gi+5];
                 t2 = B[k][gi+6];
                 t3 = B[k][gi+7];
-                t4 = A[gi+4][k];
+                t4 = A[gi+4][k];  // inner transpose
                 t5 = A[gi+5][k];
                 t6 = A[gi+6][k];
                 t7 = A[gi+7][k];
@@ -105,7 +105,7 @@ inline void _t_64(int A[64][64], int B[64][64]) {
                 B[k][gi+5] = t5;
                 B[k][gi+6] = t6;
                 B[k][gi+7] = t7;
-                B[k+4][gi  ] = t0;
+                B[k+4][gi  ] = t0;  // renew
                 B[k+4][gi+1] = t1;
                 B[k+4][gi+2] = t2;
                 B[k+4][gi+3] = t3;
