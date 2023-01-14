@@ -101,14 +101,14 @@ inline void _t_64(int A[64][64], int B[64][64]) {
                 t5 = A[gi+5][k];
                 t6 = A[gi+6][k];
                 t7 = A[gi+7][k];
-                B[k+4][gi  ] = t0;
-                B[k+4][gi+1] = t1;
-                B[k+4][gi+2] = t2;
-                B[k+4][gi+3] = t3;
                 B[k][gi+4] = t4;
                 B[k][gi+5] = t5;
                 B[k][gi+6] = t6;
                 B[k][gi+7] = t7;
+                B[k+4][gi  ] = t0;
+                B[k+4][gi+1] = t1;
+                B[k+4][gi+2] = t2;
+                B[k+4][gi+3] = t3;
             }
 
             for (t0 = gi+4; t0 < gi+8; t0++) {
