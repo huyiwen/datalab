@@ -504,17 +504,17 @@ unsigned float_i2f(int x) {
 int howManyBits(int x) {
     volatile int _x = (x >> 31) ^ x;
 
-    int pos16 = (!!(_x >> 16)) << 4;
-    _x >>= pos16;
-    int pos8 = (!!(_x >> 8)) << 3;
-    _x >>= pos8;
-    int pos4 = (!!(_x >> 4)) << 2;
-    _x >>= pos4;
-    int pos2 = (!!(_x >> 2)) << 1;
-    _x >>= pos2;
-    int pos1 = _x >> 1;
-    _x >>= pos1;
-    return pos16 + pos8 + pos4 + pos2 + pos1 + 1 + _x;
+    int posone = (!!(_x >> 16)) << 4;
+    _x >>= posone;
+    int postwo = (!!(_x >> 8)) << 3;
+    _x >>= postwo;
+    int posthree = (!!(_x >> 4)) << 2;
+    _x >>= posthree;
+    int posfour = (!!(_x >> 2)) << 1;
+    _x >>= posfour;
+    int posfive = _x >> 1;
+    _x >>= posfive;
+    return posone + postwo + posthree + posfour + posfive + 1 + _x;
 }
 
 /*
@@ -536,7 +536,7 @@ unsigned float_half(unsigned uf) {
     if (uf_exp > div_man) {
         return uf - div_man * (uf_exp != exponents);
     } else {
-        unsigned div_exp = (uf + ((uf & 3) == 3) ^ _sign) >> 1;
+        unsigned div_exp = (uf + (((uf & 3) == 3) ^ (_sign))) >> 1;
         return _sign | div_exp;
     }
 }
