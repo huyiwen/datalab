@@ -1,7 +1,7 @@
 /* 
  * tsh - A tiny shell program with job control
  * 
- * <Put your name and login ID here>
+ * HU Yiwen 2021201719
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +43,7 @@ int nextjid = 1;            /* next job ID to allocate */
 char sbuf[MAXLINE];         /* for composing sprintf messages */
 
 struct job_t {              /* The job struct */
-    pid_t pid;              /* job PID */
+    pid_t pid;              /* job Parent ID */
     int jid;                /* job ID [1, 2, ...] */
     int state;              /* UNDEF, BG, FG, or ST */
     char cmdline[MAXLINE];  /* command line */
@@ -263,6 +263,7 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
+    printf("sigchld\n");
     return;
 }
 
@@ -273,6 +274,7 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
+    printf("sigint\n");
     return;
 }
 
@@ -283,6 +285,7 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+    printf("sigtstp\n");
     return;
 }
 
