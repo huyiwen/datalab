@@ -65,7 +65,7 @@ void sigtstp_handler(int sig);
 void sigint_handler(int sig);
 
 /* Here are helper routines that we've provided for you */
-int parseline(const char *cmdline, char **argv); 
+int parseline(const char *cmdline, int *argc, char **argv); 
 void sigquit_handler(int sig);
 
 void clearjob(struct job_t *job);
@@ -165,6 +165,13 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
+    int argc;
+    static char argv[MAXARGS][MAXLINE];
+    is_bg = parseline(cmdline, &argc, argv);
+    for (int i = 0; i < argc; i++) {
+        printf("%s\n", argv[i]);
+    }
+    
     return;
 }
 
@@ -175,21 +182,20 @@ void eval(char *cmdline)
  * argument.  Return true if the user has requested a BG job, false if
  * the user has requested a FG job.  
  */
-int parseline(const char *cmdline, char **argv) 
+int parseline(const char *cmdline, int *argc, char **argv)
 {
     static char array[MAXLINE]; /* holds local copy of command line */
     char *buf = array;          /* ptr that traverses command line */
     char *delim;                /* points to first space delimiter */
-    int argc;                   /* number of args */
     int bg;                     /* background job? */
 
-    strcpy(buf, cmdline);
+    strcpy(buf, cmdline);      /* copy cmdline to local buffer */
     buf[strlen(buf)-1] = ' ';  /* replace trailing '\n' with space */
     while (*buf && (*buf == ' ')) /* ignore leading spaces */
 	buf++;
 
     /* Build the argv list */
-    argc = 0;
+    *argc = 0;
     if (*buf == '\'') {
 	buf++;
 	delim = strchr(buf, '\'');
@@ -199,7 +205,7 @@ int parseline(const char *cmdline, char **argv)
     }
 
     while (delim) {
-	argv[argc++] = buf;
+	argv[(*argc)++] = buf;
 	*delim = '\0';
 	buf = delim + 1;
 	while (*buf && (*buf == ' ')) /* ignore spaces */
@@ -213,14 +219,14 @@ int parseline(const char *cmdline, char **argv)
 	    delim = strchr(buf, ' ');
 	}
     }
-    argv[argc] = NULL;
+    argv[*argc] = NULL;
     
-    if (argc == 0)  /* ignore blank line */
+    if (*argc == 0)  /* ignore blank line */
 	return 1;
 
     /* should the job run in the background? */
-    if ((bg = (*argv[argc-1] == '&')) != 0) {
-	argv[--argc] = NULL;
+    if ((bg = (*argv[(*argc)-1] == '&')) != 0) {
+	argv[--(*argc)] = NULL;
     }
     return bg;
 }
@@ -263,7 +269,8 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
-    printf("sigchld\n");
+    if (verbose)
+        printf("sigchld\n");
     return;
 }
 
@@ -274,7 +281,8 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
-    printf("sigint\n");
+    if (verbose)
+        printf("sigint\n");
     return;
 }
 
@@ -285,7 +293,8 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
-    printf("sigtstp\n");
+    if (verbose)
+        printf("sigtstp\n");
     return;
 }
 
