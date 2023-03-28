@@ -134,6 +134,7 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 #define Vprintf(...) if(verbose) { printf(__VA_ARGS__); }
 #define VSputs(msg) if(verbose) { Sio_puts(msg); }
 #define VSputl(val) if(verbose) { Sio_putl(val); }
+#define VSputjob(pid,jid) if(verbose) { Sio_puts("Job "); Sio_putl(pid); Sio_puts(" ("); Sio_putl(jid); Sio_puts(") "); }
 
 /* Here are the functions that you will implement */
 void eval(char *cmdline);  // done
@@ -159,6 +160,8 @@ struct job_t *getjobpid(struct job_t *jobs, pid_t pid);
 struct job_t *getjobjid(struct job_t *jobs, int jid);
 int pid2jid(pid_t pid);
 void listjobs(struct job_t *jobs);
+void unix_error(char *msg);
+void app_error(char *msg);
 void usage(void);
 
 /* Other helper functions */
@@ -438,10 +441,7 @@ void sigchld_handler(int sig) {
     VSputs("Caught sigchld\n");
     while ((_pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
         _jid = pid2jid(_pid);
-        VSputs("sigchld: Job ");
-        VSputl(_jid);
-        VSputs(" ");
-        VSputl(_pid);
+        VSputjob(_jid, _jid);
 
         if (WIFEXITED(status)) {
             // Exit normally
@@ -476,7 +476,15 @@ void sigchld_handler(int sig) {
  *    to the foreground job.
  */
 void sigint_handler(int sig) {
-    Vprintf("sigint\n");
+    int _errno = errno;  // save errno and restore before return
+    pid_t _pid = fgpid(jobs);
+    if (_pid) {
+        Kill(-_pid, SIGINT);  // forward to all process in the same process group
+        int _jid = pid2jid(_pid);
+        VSputjob(_pid, _jid);
+        VSputs(" and its entire foreground jobs with same process group are killed\n");
+    }
+    errno = _errno;
     return;
 }
 
@@ -486,8 +494,15 @@ void sigint_handler(int sig) {
  *     foreground job by sending it a SIGTSTP.
  */
 void sigtstp_handler(int sig) {
+    int _errno = errno;  // save errno and restore before return
     pid_t _pid = fgpid(jobs);
-
+    if (_pid) {
+        Kill(-_pid, SIGTSTP);  // forward to all process in the same process group
+        int _jid = pid2jid(_pid);
+        VSputjob(_pid, _jid);
+        VSputs(" and its entire foreground jobs with same process group are killed\n");
+    }
+    errno = _errno;
     return;
 }
 
@@ -695,7 +710,7 @@ pid_t Fork(void) {
     pid_t pid;
 
     if ((pid = fork()) < 0)
-        sio_error("Fork error");
+        unix_error("Fork error");
     return pid;
 }
 /* $end forkwrapper */
@@ -704,7 +719,7 @@ void Execve(const char * filename, char *
     const argv[], char *
         const envp[]) {
     if (execve(filename, argv, envp) < 0)
-        sio_error("Execve error");
+        unix_error("Execve error");
 }
 
 /* $begin wait */
@@ -712,7 +727,7 @@ pid_t Wait(int * status) {
     pid_t pid;
 
     if ((pid = wait(status)) < 0)
-        sio_error("Wait error");
+        unix_error("Wait error");
     return pid;
 }
 /* $end wait */
@@ -721,7 +736,7 @@ pid_t Waitpid(pid_t pid, int * iptr, int options) {
     pid_t retpid;
 
     if ((retpid = waitpid(pid, iptr, options)) < 0)
-        sio_error("Waitpid error");
+        unix_error("Waitpid error");
     return (retpid);
 }
 
@@ -730,7 +745,7 @@ void Kill(pid_t pid, int signum) {
     int rc;
 
     if ((rc = kill(pid, signum)) < 0)
-        sio_error("Kill error");
+        unix_error("Kill error");
 }
 /* $end kill */
 
@@ -743,7 +758,7 @@ unsigned int Sleep(unsigned int secs) {
     unsigned int rc;
 
     if ((rc = sleep(secs)) < 0)
-        sio_error("Sleep error");
+        unix_error("Sleep error");
     return rc;
 }
 
@@ -755,7 +770,7 @@ void Setpgid(pid_t pid, pid_t pgid) {
     int rc;
 
     if ((rc = setpgid(pid, pgid)) < 0)
-        sio_error("Setpgid error");
+        unix_error("Setpgid error");
     return;
 }
 
@@ -776,46 +791,66 @@ handler_t * Signal(int signum, handler_t * handler) {
     action.sa_flags = SA_RESTART; /* Restart syscalls if possible */
 
     if (sigaction(signum, & action, & old_action) < 0)
-        sio_error("Signal error");
+        unix_error("Signal error");
     return (old_action.sa_handler);
 }
 /* $end sigaction */
 
+/*
+ * unix_error - unix-style error routine
+ */
+void unix_error(char *msg)
+{
+    sio_puts(msg);
+    sio_puts(": ");
+    sio_puts(strerror(errno));
+    sio_error("\n");
+}
+
+/*
+ * app_error - application-style error routine
+ */
+void app_error(char *msg)
+{
+    sio_puts(msg);
+    sio_error("\n");
+}
+
 void Sigprocmask(int how,
     const sigset_t * set, sigset_t * oldset) {
     if (sigprocmask(how, set, oldset) < 0)
-        sio_error("Sigprocmask error");
+        unix_error("Sigprocmask error");
     return;
 }
 
 void Sigemptyset(sigset_t * set) {
     if (sigemptyset(set) < 0)
-        sio_error("Sigemptyset error");
+        unix_error("Sigemptyset error");
     return;
 }
 
 void Sigfillset(sigset_t * set) {
     if (sigfillset(set) < 0)
-        sio_error("Sigfillset error");
+        unix_error("Sigfillset error");
     return;
 }
 
 void Sigaddset(sigset_t * set, int signum) {
     if (sigaddset(set, signum) < 0)
-        sio_error("Sigaddset error");
+        unix_error("Sigaddset error");
     return;
 }
 
 void Sigdelset(sigset_t * set, int signum) {
     if (sigdelset(set, signum) < 0)
-        sio_error("Sigdelset error");
+        unix_error("Sigdelset error");
     return;
 }
 
 int Sigismember(const sigset_t * set, int signum) {
     int rc;
     if ((rc = sigismember(set, signum)) < 0)
-        sio_error("Sigismember error");
+        unix_error("Sigismember error");
     return rc;
 }
 
