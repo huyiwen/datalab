@@ -286,6 +286,8 @@ void eval(char *cmdline) {
     addjob(jobs, pid, job_state, cmdline);
     Sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
 
+    // (3) Post-processing
+
     if (job_state == BG) {
         printf("[%d] (%d) %s", pid2jid(pid), (int)pid, cmdline);
     } else {
@@ -401,14 +403,15 @@ void do_bgfg(char **argv) {
         VSputl(_jid);
         VSputs("\n");
         if (_job == NULL) {
-            printf("(%d): No such job\n", _jid);
+            printf("%s: No such job\n", argv[1]);
             return ;
         }
     } else {
         // pid
         _job = getjobjid(jobs, _pid);
         if (_job == NULL) {
-            printf("(%d): No such process\n", _pid);
+            printf("(%s): No such process\n", argv[1]);
+            return ;
         }
     }
     VSputjob(_job->jid, _job->pid);
@@ -721,7 +724,7 @@ void sigquit_handler(int sig) {
 
 void Exceve(const char *filename, char *const argv[], char *const envp[]) {
     if (execve(filename, argv, environ) < 0) {
-        printf("%s: Command not found.\n", argv[0]);
+        printf("%s: Command not found\n", argv[0]);
         exit(0);
     }
 }
@@ -977,3 +980,4 @@ ssize_t Sio_puts(char s[])
         sio_error("Sio_puts error");
     return n;
 }
+
