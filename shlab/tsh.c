@@ -136,16 +136,16 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 #define VSputl(val) if(verbose) { Sio_putl(val); }
 #define VSputjob(pid,jid) if(verbose) { \
                               sio_puts("Job ["); \
-                              sio_putl(_jid); \
+                              sio_putl(jid); \
                               sio_puts("] ("); \
-                              sio_putl(_pid); \
+                              sio_putl(pid); \
                               sio_puts(")"); \
                           } \
 // end of VSputjob
-#define Sputjob(pid,jid) sio_puts("Job ["); \
-                         sio_putl(_jid); \
+#define Sputjob(jid,pid) sio_puts("Job ["); \
+                         sio_putl(jid); \
                          sio_puts("] ("); \
-                         sio_putl(_pid); \
+                         sio_putl(pid); \
                          sio_puts(")") \
 // end of Sputjob
 
@@ -375,6 +375,8 @@ int builtin_cmd(char **argv) {
  */
 void do_bgfg(char **argv) {
 
+    VSputs("do_bgfg: ");
+
     // (1) check argument
 
     if (argv[1] == NULL) {
@@ -382,7 +384,10 @@ void do_bgfg(char **argv) {
         return ;
     }
 
-    if (!isdigit(argv[1]) || (argv[1][0] != '%' && !isdigit(argv[1]+1))) {
+    char *_jend, *_pend;
+    int _jid = strtol(argv[1]+1, &_jend, 10);
+    pid_t _pid = strtol(argv[1], &_pend, 10);
+    if ((*_pend != 0 && *_pend != '%') || (argv[1][0] == '%' && *_jend != 0)) {
         printf("%s: argument must be a PID or %%jobid\n", argv[0]);
         return ;
     }
@@ -392,20 +397,21 @@ void do_bgfg(char **argv) {
     struct job_t* _job;
     if (argv[1][0] == '%') {
         // jobid
-        int _jid = atoi(argv[1]+1);
         _job = getjobjid(jobs, _jid);
+        VSputl(_jid);
+        VSputs("\n");
         if (_job == NULL) {
             printf("(%d): No such job\n", _jid);
             return ;
         }
     } else {
         // pid
-        pid_t _pid = atoi(argv[1]);
         _job = getjobjid(jobs, _pid);
         if (_job == NULL) {
             printf("(%d): No such process\n", _pid);
         }
     }
+    VSputjob(_job->jid, _job->pid);
 
     // (3) Change state and continue
 
