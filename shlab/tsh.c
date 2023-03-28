@@ -479,7 +479,7 @@ void sigchld_handler(int sig) {
             Sigprocmask(SIG_SETMASK, &prev_all, NULL);
             Sputjob(_jid, _pid);
             sio_puts(" stopped by signal ");
-            sio_putl(WTERMSIG(status));
+            sio_putl(WSTOPSIG(status));
             sio_puts("\n");
         } else {
             VSputs(" unknown status ");
