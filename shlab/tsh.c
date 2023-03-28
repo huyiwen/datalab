@@ -134,7 +134,20 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 #define Vprintf(...) if(verbose) { printf(__VA_ARGS__); }
 #define VSputs(msg) if(verbose) { Sio_puts(msg); }
 #define VSputl(val) if(verbose) { Sio_putl(val); }
-#define VSputjob(pid,jid) if(verbose) { Sio_puts("Job "); Sio_putl(pid); Sio_puts(" ("); Sio_putl(jid); Sio_puts(") "); }
+#define VSputjob(pid,jid) if(verbose) { \
+                              sio_puts("Job ["); \
+                              sio_putl(_jid); \
+                              sio_puts("] ("); \
+                              sio_putl(_pid); \
+                              sio_puts(")"); \
+                          } \
+// end of VSputjob
+#define Sputjob(pid,jid) sio_puts("Job ["); \
+                         sio_putl(_jid); \
+                         sio_puts("] ("); \
+                         sio_putl(_pid); \
+                         sio_puts(")") \
+// end of Sputjob
 
 /* Here are the functions that you will implement */
 void eval(char *cmdline);  // done
@@ -371,6 +384,7 @@ void do_bgfg(char **argv) {
 
     if (!isdigit(argv[1]) || (argv[1][0] != '%' && !isdigit(argv[1]+1))) {
         printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+        return ;
     }
 
     // (2) Get _job by PID or jobid
@@ -403,8 +417,8 @@ void do_bgfg(char **argv) {
     } else {
         // background
         _job->state = BG;
-        Kill(-_job->pid, SIGCONT);
         printf("[%d] (%d) %s", _job->jid, _job->pid, _job->cmdline);
+        Kill(-_job->pid, SIGCONT);
     }
 }
 
@@ -441,16 +455,21 @@ void sigchld_handler(int sig) {
     VSputs("Caught sigchld\n");
     while ((_pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
         _jid = pid2jid(_pid);
-        VSputjob(_jid, _jid);
 
         if (WIFEXITED(status)) {
             // Exit normally
             deletejob(jobs, _pid);
+            VSputjob(_jid, _jid);
             VSputs(" normal termination with status ");
+            VSputl(WTERMSIG(status));
+            VSputs("\n");
         } else if (WIFSIGNALED(status)) {
             // Exit by signal
             deletejob(jobs, _pid);
-            VSputs(" terminated by signal ");
+            Sputjob(_jid, _pid);
+            sio_puts(" terminated by signal ");
+            sio_putl(WTERMSIG(status));
+            sio_puts("\n");
         } else if (WIFSTOPPED(status)) {
             // Signal stop (cannot be captured or ignored): change state manually
             sigset_t mask_all, prev_all;
@@ -458,12 +477,13 @@ void sigchld_handler(int sig) {
             Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
             getjobpid(jobs, _pid)->state = ST;
             Sigprocmask(SIG_SETMASK, &prev_all, NULL);
-            VSputs(" stopped by signal ");
+            Sputjob(_jid, _pid);
+            sio_puts(" stopped by signal ");
+            sio_putl(WTERMSIG(status));
+            sio_puts("\n");
         } else {
             VSputs(" unknown status ");
         }
-        VSputl(WTERMSIG(status));
-        VSputs("\n");
     }
 
     errno = _errno;
@@ -877,7 +897,6 @@ static void sio_reverse(char s[])
 }
 
 /* sio_ltoa - Convert long to base b string (from K&R) */
-// 将v转换成它的基b字符串表示，保存在s中
 static void sio_ltoa(long v, char s[], int b)
 {
     int c, i = 0;
