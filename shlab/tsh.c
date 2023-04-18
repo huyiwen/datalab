@@ -136,16 +136,16 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 #define VSputl(val) if(verbose) { Sio_putl(val); }
 #define VSputjob(pid,jid) if(verbose) { \
                               sio_puts("Job ["); \
-                              sio_putl(_jid); \
+                              sio_putl(jid); \
                               sio_puts("] ("); \
-                              sio_putl(_pid); \
+                              sio_putl(pid); \
                               sio_puts(")"); \
                           } \
 // end of VSputjob
-#define Sputjob(pid,jid) sio_puts("Job ["); \
-                         sio_putl(_jid); \
+#define Sputjob(jid,pid) sio_puts("Job ["); \
+                         sio_putl(jid); \
                          sio_puts("] ("); \
-                         sio_putl(_pid); \
+                         sio_putl(pid); \
                          sio_puts(")") \
 // end of Sputjob
 
@@ -286,6 +286,8 @@ void eval(char *cmdline) {
     addjob(jobs, pid, job_state, cmdline);
     Sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
 
+    // (3) Post-processing
+
     if (job_state == BG) {
         printf("[%d] (%d) %s", pid2jid(pid), (int)pid, cmdline);
     } else {
@@ -375,6 +377,8 @@ int builtin_cmd(char **argv) {
  */
 void do_bgfg(char **argv) {
 
+    VSputs("do_bgfg: ");
+
     // (1) check argument
 
     if (argv[1] == NULL) {
@@ -382,7 +386,10 @@ void do_bgfg(char **argv) {
         return ;
     }
 
-    if (!isdigit(argv[1]) || (argv[1][0] != '%' && !isdigit(argv[1]+1))) {
+    char *_jend, *_pend;
+    int _jid = strtol(argv[1]+1, &_jend, 10);
+    pid_t _pid = strtol(argv[1], &_pend, 10);
+    if ((*_pend != 0 && *_pend != '%') || (argv[1][0] == '%' && *_jend != 0)) {
         printf("%s: argument must be a PID or %%jobid\n", argv[0]);
         return ;
     }
@@ -392,20 +399,22 @@ void do_bgfg(char **argv) {
     struct job_t* _job;
     if (argv[1][0] == '%') {
         // jobid
-        int _jid = atoi(argv[1]+1);
         _job = getjobjid(jobs, _jid);
+        VSputl(_jid);
+        VSputs("\n");
         if (_job == NULL) {
-            printf("(%d): No such job\n", _jid);
+            printf("%s: No such job\n", argv[1]);
             return ;
         }
     } else {
         // pid
-        pid_t _pid = atoi(argv[1]);
         _job = getjobjid(jobs, _pid);
         if (_job == NULL) {
-            printf("(%d): No such process\n", _pid);
+            printf("(%s): No such process\n", argv[1]);
+            return ;
         }
     }
+    VSputjob(_job->jid, _job->pid);
 
     // (3) Change state and continue
 
@@ -479,7 +488,7 @@ void sigchld_handler(int sig) {
             Sigprocmask(SIG_SETMASK, &prev_all, NULL);
             Sputjob(_jid, _pid);
             sio_puts(" stopped by signal ");
-            sio_putl(WTERMSIG(status));
+            sio_putl(WSTOPSIG(status));
             sio_puts("\n");
         } else {
             VSputs(" unknown status ");
@@ -715,7 +724,7 @@ void sigquit_handler(int sig) {
 
 void Exceve(const char *filename, char *const argv[], char *const envp[]) {
     if (execve(filename, argv, environ) < 0) {
-        printf("%s: Command not found.\n", argv[0]);
+        printf("%s: Command not found\n", argv[0]);
         exit(0);
     }
 }
@@ -971,3 +980,4 @@ ssize_t Sio_puts(char s[])
         sio_error("Sio_puts error");
     return n;
 }
+

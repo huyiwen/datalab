@@ -1,1 +1,1 @@
-/mnt/ics1-2020/2021201719/labs/shlab/tsh.c
+../../../tsh.c
