@@ -19,7 +19,7 @@ team_t team = {
 /* Basic constants and macros */
 #define WSIZE 4 /* word size (bytes) */
 #define DSIZE 8 /* doubleword size (bytes) */
-#define CHUNKSIZE (1 << 10) /* initial heap size (bytes) */
+#define CHUNKSIZE (1 << 9) /* initial heap size (bytes) */
 #define OVERHEAD 8 /* overhead of header and footer (bytes) */
 
 /* Segregated list (bytes) */
@@ -39,6 +39,7 @@ team_t team = {
 #define W3 12
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 /* Pack a size and allocated bit into a word */
 #define PACK(size, alloc) ((size) | (alloc))
@@ -89,7 +90,7 @@ static void* find_fit(size_t asize);
 static void* coalesce(void* bp);
 static void regist(void* bp);
 static void unregist(void* bp);
-static void* get_root(size_t size);
+static void* get_root(size_t size, int insert);
 
 /* function prototypes for heap consistency checker */
 #ifdef DEBUG
@@ -194,16 +195,49 @@ void mm_free(void* bp)
 void* mm_realloc(void* ptr, size_t size)
 {
     void* newp;
-    size_t copySize;
 
-    if ((newp = mm_malloc(size)) == NULL) {
+    if (ptr == NULL) {
+        return mm_malloc(size);
+    } else if (size == 0){
+        mm_free(ptr);
         return NULL;
     }
-    copySize = GET_SIZE(HDRP(ptr));
-    if (size < copySize)
-        copySize = size;
-    memcpy(newp, ptr, copySize);
-    mm_free(ptr);
+
+    size_t copy_size = GET_SIZE(HDRP(ptr));
+    if (copy_size == size) {
+        return ptr;
+    }
+
+    char prev =  GET_ALLOC(FTRP(PREV_BLKP(ptr)));
+    char next =  GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+    size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
+    size_t asize = PALIGN(size);
+    size_t total_size = copy_size;
+    void *next_ptr = NEXT_BLKP(ptr);
+
+    if (prev && !next && (copy_size + next_size >= asize)) {  // extend
+        total_size += next_size;
+        unregist(next_ptr);
+        ADDB(ptr, total_size, 1);
+        place(ptr, total_size);
+
+    } else if (!next_size && asize >= copy_size) {
+        size_t extend_size = asize - copy_size;
+        if((mem_sbrk(extend_size)) == (void *)-1) {
+            return NULL;
+        }
+        ADDB(ptr, total_size + extend_size, 1);
+        PUT(HDRP(NEXT_BLKP(ptr)), PACK(0, 1));
+        place(ptr, asize);
+
+    } else {
+        if ((newp = mm_malloc(size)) == NULL) {
+            return NULL;
+        }
+        copy_size = MIN(size, copy_size);
+        memcpy(newp, ptr, copy_size);
+        mm_free(ptr);
+    }
 
     #ifdef DEBUG
     mm_checkheap(0);
@@ -248,7 +282,7 @@ static void* find_fit(size_t asize)
     static int cnt2 = 0;
     cnt++;
     #endif
-    void **root = get_root(asize);
+    void **root = get_root(asize, 0);
     while (root < list_limit) {
         void *bp = *root;
         while (bp) {
@@ -268,13 +302,20 @@ static void* find_fit(size_t asize)
     return NULL;
 }
 
-static void* get_root(size_t size)
+static void* get_root(size_t size, int insert)
 {
+    // printf("%lu\n", size);
     int i = 0;
-    size_t res = 1 << 4;
+    // size_t res = 1 << 4;
+    static size_t res[LISTSIZE - 1] = {16, 24, 32, 64, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 4096, 8192, 16384, 32768, 114688};
+
+    if (size > res[LISTSIZE - 2]) {
+        return list_base + LISTSIZE - 1;
+    }
+
     // leave the last list for large blocks
-    for (i = 0; i < LISTSIZE - 1; i++, res <<= 1)
-        if (size <= res)
+    for (i = 0; i < LISTSIZE - 1; i++)
+        if (size <= res[i])
             break;
     return list_base + i;
 }
@@ -285,7 +326,7 @@ static void regist(void* bp)
     static int cnt = 0;
     cnt++;
     #endif
-    void **root = get_root(GET_SIZE(HDRP(bp)));
+    void **root = get_root(GET_SIZE(HDRP(bp)), 1);
 
     // [*root]-> [NEXT, -> [NEXT, -> [NEXT,
     //   NULL <-  PREV] <-  PREV] <-  PREV]
@@ -312,7 +353,7 @@ static void unregist(void* bp)
     if (bp == NULL) {
         return ;
     }
-    void **root = get_root(GET_SIZE(HDRP(bp)));
+    void **root = get_root(GET_SIZE(HDRP(bp)), 1);
 
     // [root] -> [NEXT, -> [NEXT, -> [NEXT,
     //  NULL  <-  PREV] <-  PREV] <-  PREV]
