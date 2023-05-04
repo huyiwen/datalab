@@ -194,8 +194,6 @@ void mm_free(void* bp)
  */
 void* mm_realloc(void* ptr, size_t size)
 {
-    void* newp;
-
     if (ptr == NULL) {
         return mm_malloc(size);
     } else if (size == 0){
@@ -214,6 +212,7 @@ void* mm_realloc(void* ptr, size_t size)
     size_t asize = PALIGN(size);
     size_t total_size = copy_size;
     void *next_ptr = NEXT_BLKP(ptr);
+    void *newp = ptr;
 
     if (prev && !next && (copy_size + next_size >= asize)) {  // extend
         total_size += next_size;
@@ -222,7 +221,7 @@ void* mm_realloc(void* ptr, size_t size)
         place(ptr, total_size);
 
     } else if (!next_size && asize >= copy_size) {
-        size_t extend_size = asize - copy_size;
+        size_t extend_size = PALIGN(asize - copy_size);
         if((mem_sbrk(extend_size)) == (void *)-1) {
             return NULL;
         }
@@ -337,6 +336,7 @@ static void regist(void* bp)
     }
     PUT_PREV_FREE(bp, NULL);
 
+    #ifdef DEBUG
     if ((long)root == 0x7ffff67ff050) {
         // bp = 0x7ffff68000f0
         printf("root = 0x7ffff67ff050, bp = %lx, NEXT = %lx, PREV = %lx\n", (unsigned long)bp, (unsigned long)GET_NEXT_FREE(bp), (unsigned long)GET_PREV_FREE(bp));
@@ -344,6 +344,7 @@ static void regist(void* bp)
             printf("NEXT NEXT = %lx, NEXT PREV = %lx\n", (unsigned long)GET_NEXT_FREE(GET_NEXT_FREE(bp)), (unsigned long)GET_PREV_FREE(GET_NEXT_FREE(bp)));
         }
     }
+    #endif
 
     *root = bp;
 }
