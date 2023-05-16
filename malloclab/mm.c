@@ -230,11 +230,11 @@ void* mm_realloc(void* ptr, size_t size)
         place(ptr, asize);
 
     } else {
+        // update newp here
         if ((newp = mm_malloc(size)) == NULL) {
             return NULL;
         }
-        copy_size = MIN(size, copy_size);
-        memcpy(newp, ptr, copy_size);
+        memcpy(newp, ptr, MIN(size, copy_size));
         mm_free(ptr);
     }
 
