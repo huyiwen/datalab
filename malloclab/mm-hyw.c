@@ -160,7 +160,7 @@ void* mm_malloc(size_t size)
     }
 
     /* No fit found. Get more memory and place the block */
-    size_t extendsize = MAX(asize / WSIZE, CHUNKSIZE);
+    size_t extendsize = MAX(asize >> 2, CHUNKSIZE);
     if ((bp = extend_heap(extendsize)) == NULL)
         return NULL;
     place(bp, asize);
@@ -206,8 +206,8 @@ void* mm_realloc(void* ptr, size_t size)
         return ptr;
     }
 
-    char prev =  GET_ALLOC(FTRP(PREV_BLKP(ptr)));
-    char next =  GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+    char prev = GET_ALLOC(FTRP(PREV_BLKP(ptr)));
+    char next = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
     size_t asize = PALIGN(size);
     size_t total_size = copy_size;
